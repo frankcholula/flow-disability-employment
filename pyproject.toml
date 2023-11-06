@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "flow-disability-employment"
+version = "0.1.0"
+description = "data analysis for flow disability employment project"
+authors = ["Frank Lu <lu.phrank@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "<3.13,>=3.9"
+pandas = "^2.1.2"
+plotly = "^5.18.0"
+numpy = "^1.26.1"
+
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
