@@ -6,10 +6,14 @@ authors = ["Frank Lu <lu.phrank@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "<3.13,>=3.9"
+python = ">3.9.7,<3.13"
 pandas = "^2.1.2"
 plotly = "^5.18.0"
 numpy = "^1.26.1"
+matplotlib = "^3.8.1"
+scikit-learn = "^1.3.2"
+seaborn = "^0.13.0"
+streamlit = "^1.28.1"
 
 
 [tool.poetry.group.dev.dependencies]
