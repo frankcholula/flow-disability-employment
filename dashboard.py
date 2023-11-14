@@ -33,7 +33,7 @@ def read_data(file_path) -> List[pd.DataFrame]:
 scores_df, ta_df, nonta_df = read_data(FILE_PATH)
 
 
-class Visaulization:
+class Visualization:
     """_summary_"""
 
     def __init__(self, vis, *args, **kwargs):
