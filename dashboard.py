@@ -14,7 +14,7 @@ outside_features = ["社群和社交活動", "自我身心照顧", "家人支持
 
 # page setup
 st.set_page_config(
-    page_title="若水身障就業資料分析",
+    page_title="🚰若水身障就業資料分析",
     page_icon="🚰",
     layout="wide",
 )
