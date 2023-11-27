@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-import time
 from typing import List
 
 dataset_url = "https://raw.githubusercontent.com/frankcholula/flow-disability-employment/main/data/scores.csv"
@@ -42,18 +41,44 @@ class Visualization:
         self.vis = vis
         dispatcher = {
             "personality": self.generate_radar_chart(),
+            "distribution": self.generate_distribution(),
         }
 
         init_func = dispatcher.get(vis)
         if not init_func:
             raise ValueError(f"Uknown visualization type: {vis}")
 
-    def generate_radar_chart(self, df, max_values, cahrts_per_row):
+    def generate_radar_chart(self):
         return
+
+    def generate_distribution(self, df: pd.DataFrame, radar_features: List[str]):
+        dist_df = df.copy()
+        dist_df[["關鍵TA"]] = ta_encoder.inverse_transform(dist_df[["關鍵TA"]])
+        for feature in radar_features:
+            num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
+
+            fig = px.histogram(
+                dist_df,
+                x=feature,
+                marginal="box",
+                title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
+                nbins=num_bins,
+                color="關鍵TA",
+            )
+
+            # Update x-axis to show integer ticks
+            fig.update_layout(
+                xaxis=dict(tickmode="linear", tick0=dist_df[feature].min(), dtick=1)
+            )
+
+            fig.show()
 
 
 # dashboard title
 st.title("若水身障就業資料分析")
+
+# distribution plot
+
 
 # top-level filters
 inside_outside_filter = st.selectbox("選擇內外部", pd.unique(scores_df["內外部"]))
