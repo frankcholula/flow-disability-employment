@@ -357,8 +357,8 @@ class Visualization:
 
 
 # dashboard title
-st.title(":potable_water: :blue[_若水_]身障就業資料分析")
-st.text("『創造多元共﻿融環境是為了每一個人』，我們希望透過商業力量，協助企業和身障人才有效銜接，改善身障就業問題！")
+st.title(":potable_water: :blue[若水]身障就業資料分析")
+st.markdown("『_創造多元共﻿融環境是為了每一個人_』，我們希望透過商業力量，協助企業和身障人才有效銜接，改善身障就業問題！")
 
 
 scores_df = read_data(dataset_url)
@@ -367,7 +367,7 @@ placeholder = st.empty()
 with placeholder.container():
     fig_col1, fig_col2, fig_col3 = st.columns(3, gap="large")
     with fig_col1:
-        st.markdown("## :dart: 定位")
+        st.header(":dart: 定位")
         option = st.selectbox(
             "視覺化六大特質",
             ("外部關鍵TA的特質常態分佈", "內外部關鍵TA的特質雷達圖", "內外部關鍵TA的特質中間值"),
@@ -415,7 +415,7 @@ with placeholder.container():
             median_radar_chart = Visualization("median", scores_df, radar_features)
 
     with fig_col2:
-        st.markdown("## :pinching_hand: 篩選")
+        st.header(":pinching_hand: 篩選")
         option = st.selectbox(
             "視覺化建模與特質篩選",
             (
@@ -434,7 +434,7 @@ with placeholder.container():
             pass
 
     with fig_col3:
-        st.markdown("## :books: 管道")
+        st.header(":books: 管道")
         option = st.selectbox(
             "視覺化求職管道與考量",
             (
