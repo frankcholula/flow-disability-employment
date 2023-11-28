@@ -84,10 +84,11 @@ class Visualization:
         median_col1, median_col2 = st.columns(2)
         with median_col1:
             inside_outside_filter = st.selectbox("選擇內外部", pd.unique(df["內外部"]))
-        with median_col2:
-            ta_filter = st.selectbox("選擇關鍵TA", pd.unique(df["關鍵TA"]))
         df = df[df["內外部"] == inside_outside_filter].reset_index(drop=True)
-        df = df[df["關鍵TA"] == ta_filter].reset_index(drop=True)
+        if inside_outside_filter == "外部":
+            with median_col2:
+                ta_filter = st.selectbox("選擇關鍵TA", pd.unique(scores_df["關鍵TA"]))
+            df = df[df["關鍵TA"] == ta_filter].reset_index(drop=True)
         st.markdown("### 六大指標中間值")
         metrics = get_median_df(df)
         is1, is2, is3, is4, is5, is6 = st.columns(6)
