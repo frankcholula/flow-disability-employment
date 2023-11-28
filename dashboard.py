@@ -34,9 +34,6 @@ from interview_wordcloud import (
 
 dataset_url = "https://raw.githubusercontent.com/frankcholula/flow-disability-employment/main/data/scores.csv"
 
-# setting font for matplotlib
-matplotlib.rcParams["font.family"] = "Heiti TC"
-
 # supress pyplot warning
 st.set_option("deprecation.showPyplotGlobalUse", False)
 
