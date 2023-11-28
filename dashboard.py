@@ -15,14 +15,37 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 dataset_url = "https://raw.githubusercontent.com/frankcholula/flow-disability-employment/main/data/scores.csv"
 
-# 內在指標 + 外在指標
+# setting font for matplotlib
+matplotlib.rcParams["font.family"] = "Heiti TC"
+
+# 內在指標 + 外在指標 + PPSS指標
 inside_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願"]
 outside_features = ["社群和社交活動", "自我身心照顧", "家人支持程度", "私人企業工作經驗", "量化求職考量", "先天後天"]
+ppss_features = [
+    "PPSS積極性",
+    "PPSS責任性",
+    "PPSS成熟性",
+    "PPSS務實性",
+    "PPSS社交性",
+    "PPSS合群性",
+    "PPSS創意性",
+    "PPSS表達性",
+    "PPSS學習性",
+    "PPSS細心",
+    "PPSS耐心",
+    "PPSS親和性",
+    "PPSS領導性",
+    "PPSS邏輯性",
+]
+
 meta_features = ["受訪者", "內外部", "關鍵TA"]
 target = "關鍵TA"
 
@@ -454,6 +477,59 @@ class Visualization:
         st.text("5. 未來可強化連結同性質社群，提升關鍵TA觸及率，例：身心障礙潛水協會")
 
     def generate_model_performance(self):
+        @ignore_warnings(category=ConvergenceWarning)
+        def logistic_regression_bootstrap(
+            df,
+            features,
+            target="關鍵TA",
+            test_size=0.2,
+            random_state=42,
+            n_bootstraps=100,
+            title="Bootstrapped",
+        ):
+            # df = scores_df.copy()
+            X_train, X_test, y_train, y_test = train_test_split(
+                df[features], df[target], test_size=test_size, random_state=random_state
+            )
+
+            classifier = LogisticRegression(random_state=42)
+            classifier.fit(X_train, y_train)
+
+            # Predict on the testing data
+            y_test_pred = classifier.predict(X_test)
+
+            bootstrap_accuracies = []
+            # bootstrapping
+            for _ in range(n_bootstraps):
+                # TODO: wrap try catch here in case we get all TA's
+                X_train_boot, y_train_boot = resample(X_train, y_train)
+                classifier.fit(X_train_boot, y_train_boot)
+                # Predict on the original testing data
+                y_test_pred_boot = classifier.predict(X_test)
+                bootstrap_accuracies.append(accuracy_score(y_test, y_test_pred_boot))
+            bootstrap_accuracies = np.array(bootstrap_accuracies)
+            mean_accuracy = bootstrap_accuracies.mean()
+            std_dev_accuracy = bootstrap_accuracies.std()
+
+            # Plot the distribution of accuracies
+            len_training = len(X_train)
+            len_testing = len(X_test)
+            st.text(f"用{len_training}位訓練，{len_testing}位盲測")
+            fig = plt.figure(figsize=(10, 6))
+            sns.histplot(bootstrap_accuracies, kde=True)
+            plt.title(title)
+            plt.xlabel("Accuracy")
+            plt.ylabel("Frequency")
+            plt.axvline(
+                x=mean_accuracy,
+                color="red",
+                linestyle="--",
+                label=f"Mean Accuracy: {mean_accuracy:.2f}",
+            )
+            plt.legend()
+            st.pyplot(fig)
+            return classifier, bootstrap_accuracies
+
         def svm_bootstrap(
             df,
             features,
@@ -490,7 +566,7 @@ class Visualization:
             # Plot the distribution of accuracies
             len_training = len(X_train)
             len_testing = len(X_test)
-            print(f"用{len_training}位訓練，{len_testing}位盲測")
+            st.text(f"用{len_training}位訓練，{len_testing}位盲測")
             fig = plt.figure(figsize=(10, 6))
             sns.histplot(bootstrap_accuracies, kde=True)
             plt.title(title)
@@ -506,24 +582,74 @@ class Visualization:
             st.pyplot(fig)
             return classifier, bootstrap_accuracies
 
-        svm, bootstrap_accuracies = svm_bootstrap(
-            scores_df,
-            inside_features,
-            n_bootstraps=500,
-            title="SVM Inside Distribution",
-        )
-        svm, bootstrap_accuracies = svm_bootstrap(
-            scores_df,
-            outside_features,
-            n_bootstraps=500,
-            title="SVM Outside Distribution",
-        )
-        svm, bootstrap_accuracies = svm_bootstrap(
-            scores_df,
-            inside_features + outside_features,
-            n_bootstraps=500,
-            title="SVM Inside + Outside Distribution",
-        )
+        model_col1, model_col2 = st.columns(2)
+        with model_col1:
+            model = st.selectbox("選擇模型", ("Logistic Regression", "SVM"))
+        with model_col2:
+            features = st.selectbox("選擇特質", ("內在特質", "外在特質", "內+外在特質", "PPSS"))
+
+        outside_df = scores_df.copy()
+        outside_df = outside_df[outside_df["內外部"] == "外部"].reset_index(drop=True)
+        if model == "SVM":
+            with st.spinner("訓練中..."):
+                if features == "內在特質":
+                    svm, bootstrap_accuracies = svm_bootstrap(
+                        outside_df,
+                        inside_features,
+                        n_bootstraps=500,
+                        title="SVM模型利用內在特質",
+                    )
+                if features == "外在特質":
+                    svm, bootstrap_accuracies = svm_bootstrap(
+                        outside_df,
+                        outside_features,
+                        n_bootstraps=500,
+                        title="SVM模型利用外在特質",
+                    )
+                if features == "內+外在特質":
+                    svm, bootstrap_accuracies = svm_bootstrap(
+                        outside_df,
+                        inside_features + outside_features,
+                        n_bootstraps=500,
+                        title="SVM模型利用內+外在特質",
+                    )
+                if features == "PPSS":
+                    svm, bootstrap_accuracies = svm_bootstrap(
+                        outside_df,
+                        ppss_features,
+                        n_bootstraps=500,
+                        title="SVM模型用PPSS特質",
+                    )
+        if model == "Logistic Regression":
+            with st.spinner("訓練中..."):
+                if features == "內在特質":
+                    lrm, bootstrap_accuracies = logistic_regression_bootstrap(
+                        outside_df,
+                        inside_features,
+                        n_bootstraps=500,
+                        title="LR模型利用內在特質",
+                    )
+                if features == "外在特質":
+                    lrm, bootstrap_accuracies = logistic_regression_bootstrap(
+                        outside_df,
+                        outside_features,
+                        n_bootstraps=500,
+                        title="LR模型利用外在特質",
+                    )
+                if features == "內+外在特質":
+                    lrm, bootstrap_accuracies = logistic_regression_bootstrap(
+                        outside_df,
+                        inside_features + outside_features,
+                        n_bootstraps=500,
+                        title="LR模型利用內+外在特質",
+                    )
+                if features == "PPSS":
+                    lrm, bootstrap_accuracies = logistic_regression_bootstrap(
+                        outside_df,
+                        ppss_features,
+                        n_bootstraps=500,
+                        title="LR模型用PPSS特質",
+                    )
 
 
 # dashboard title
@@ -629,62 +755,6 @@ with placeholder.container():
 
 
 # Load the dataset
-from sklearn.utils._testing import ignore_warnings
-from sklearn.exceptions import ConvergenceWarning
-
-
-@ignore_warnings(category=ConvergenceWarning)
-def logistic_regression_bootstrap(
-    df,
-    features,
-    target="關鍵TA",
-    test_size=0.2,
-    random_state=42,
-    n_bootstraps=100,
-    title="Bootstrapped",
-):
-    # df = scores_df.copy()
-    X_train, X_test, y_train, y_test = train_test_split(
-        df[features], df[target], test_size=test_size, random_state=random_state
-    )
-
-    classifier = LogisticRegression(random_state=42)
-    classifier.fit(X_train, y_train)
-
-    # Predict on the testing data
-    y_test_pred = classifier.predict(X_test)
-
-    bootstrap_accuracies = []
-    # bootstrapping
-    for _ in range(n_bootstraps):
-        # TODO: wrap try catch here in case we get all TA's
-        X_train_boot, y_train_boot = resample(X_train, y_train)
-        classifier.fit(X_train_boot, y_train_boot)
-        # Predict on the original testing data
-        y_test_pred_boot = classifier.predict(X_test)
-        bootstrap_accuracies.append(accuracy_score(y_test, y_test_pred_boot))
-    bootstrap_accuracies = np.array(bootstrap_accuracies)
-    mean_accuracy = bootstrap_accuracies.mean()
-    std_dev_accuracy = bootstrap_accuracies.std()
-
-    # Plot the distribution of accuracies
-    len_training = len(X_train)
-    len_testing = len(X_test)
-    print(f"用{len_training}位訓練，{len_testing}位盲測")
-    plt.figure(figsize=(10, 6))
-    sns.histplot(bootstrap_accuracies, kde=True)
-    plt.title(title)
-    plt.xlabel("Accuracy")
-    plt.ylabel("Frequency")
-    plt.axvline(
-        x=mean_accuracy,
-        color="red",
-        linestyle="--",
-        label=f"Mean Accuracy: {mean_accuracy:.2f}",
-    )
-    plt.legend()
-    plt.show()
-    return classifier, bootstrap_accuracies
 
 
 # lrm1, bootstrap_accuracies = logistic_regression_bootstrap(
