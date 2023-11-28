@@ -484,7 +484,7 @@ class Visualization:
             target="關鍵TA",
             test_size=0.2,
             random_state=42,
-            n_bootstraps=100,
+            n_bootstraps=500,
             title="Bootstrapped",
         ):
             # df = scores_df.copy()
@@ -514,7 +514,7 @@ class Visualization:
             # Plot the distribution of accuracies
             len_training = len(X_train)
             len_testing = len(X_test)
-            st.text(f"用{len_training}位訓練，{len_testing}位盲測")
+            st.text(f"跑{n_bootstraps}次，隨機選用{len_training}位訓練，指定{len_testing}位盲測")
             fig = plt.figure(figsize=(10, 6))
             sns.histplot(bootstrap_accuracies, kde=True)
             plt.title(title)
@@ -536,7 +536,7 @@ class Visualization:
             target="關鍵TA",
             test_size=0.2,
             random_state=42,
-            n_bootstraps=100,
+            n_bootstraps=500,
             title="Bootstrapped Accuracies Distribution",
         ):
             # df = scores_df.copy()
@@ -566,7 +566,7 @@ class Visualization:
             # Plot the distribution of accuracies
             len_training = len(X_train)
             len_testing = len(X_test)
-            st.text(f"用{len_training}位訓練，{len_testing}位盲測")
+            st.text(f"跑{n_bootstraps}次，隨機選用{len_training}位訓練，指定{len_testing}位盲測")
             fig = plt.figure(figsize=(10, 6))
             sns.histplot(bootstrap_accuracies, kde=True)
             plt.title(title)
