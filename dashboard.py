@@ -46,6 +46,7 @@ class Visualization:
             "distribution": self.generate_distribution,
             "median": self.generate_median_radar_chart,
             "correlation": self.generate_correlation_matrix,
+            "disability": self.generate_disability_histogram,
         }
 
         init_func = dispatcher.get(vis)
@@ -235,12 +236,14 @@ class Visualization:
         self,
         df: pd.DataFrame,
         features: List[str],
-        title="Spearman's Rho 特質相關度",
+        title="外部訪談者內在 vs. 外在的特質相關度 (等級相關係數)",
         xaxis="外在特質",
         yaxis="內在特質",
     ):
         corr_df = df.copy()
+        corr_df = corr_df[corr_df["內外部"] == "外部"].reset_index(drop=True)
         corr_mx = corr_df[corr_features].corr(method="kendall")
+        corr_mx = corr_mx[0:5][outside_features]
         fig = ff.create_annotated_heatmap(
             z=corr_mx.values,
             x=list(corr_mx.columns),
@@ -256,6 +259,12 @@ class Visualization:
             yaxis=dict(title=yaxis),
         )
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown("_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_")
+
+    def generate_disability_histogram(
+        self,
+    ):
+        pass
 
 
 # dashboard title
@@ -320,14 +329,14 @@ with placeholder.container():
         option = st.selectbox(
             "視覺化建模與特質篩選",
             (
-                "關鍵TA相關矩陣",
+                "特質相關矩陣",
                 "利用特質建模預測關鍵TA",
             ),
             index=None,
             placeholder="選擇視覺化圖表",
         )
 
-        if option == "關鍵TA相關矩陣":
+        if option == "特質相關矩陣":
             corr_features = inside_features + outside_features
             correlation_matrix = Visualization("correlation", scores_df, corr_features)
 
@@ -344,3 +353,12 @@ with placeholder.container():
             index=None,
             placeholder="選擇視覺化圖表",
         )
+        if option == "問卷學歷":
+            pass
+        if option == "障別分析":
+            visualization = Visualization("disability", scores_df)
+
+        if option == "求職考量":
+            pass
+        if option == "問卷求職管道":
+            pass
