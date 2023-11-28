@@ -51,88 +51,31 @@ class Visualization:
                 init_func()
 
     def generate_radar_chart(self):
-        return
-
-    def generate_distribution(self, df: pd.DataFrame, features: List[str]):
-        placeholder = st.empty()
-        with placeholder.container():
-            dist_df = df.copy()
-            color_dict = {"T": "red", "F": "blue"}
-
-            for feature in features:
-                num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
-
-                fig = px.histogram(
-                    dist_df,
-                    x=feature,
-                    marginal="box",
-                    title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
-                    nbins=num_bins,
-                    color="關鍵TA",
-                    color_discrete_map=color_dict,
+        def get_median_df(df):
+            try:
+                if df["關鍵TA"].unique()[0] == "關鍵TA":
+                    key = "關鍵TA中間值"
+                else:
+                    key = "非關鍵TA中間值"
+                key = "外部" + key if df["內外部"].unique()[0] == "外部" else "內部" + key
+                avg_inside_features = df[inside_features].median()
+                avg_outside_features = df[outside_features].median()
+                avg_ta = pd.Series(
+                    [key]
+                    + [None] * (len(meta_features) - 1)
+                    + avg_inside_features.tolist()
+                    + avg_outside_features.tolist()
+                    + [key],
+                    index=["受訪者"]
+                    + meta_features[1:]
+                    + inside_features
+                    + outside_features
+                    + [target],
                 )
+            except Exception as e:
+                avg_ta = pd.Series([0.0] * len(df.columns), index=df.columns)
+            return avg_ta.to_frame().transpose()
 
-                fig.update_layout(
-                    xaxis=dict(tickmode="linear", tick0=dist_df[feature].min(), dtick=1)
-                )
-
-                fig.update_traces(opacity=0.75)
-
-                st.plotly_chart(fig, use_container_width=True)
-
-
-# dashboard title
-st.title("若水身障就業資料分析")
-scores_df = read_data(dataset_url)
-# inside_outside_filter = st.selectbox("選擇內外部", pd.unique(scores_df["內外部"]))
-# ta_filter = st.selectbox("選擇關鍵TA", pd.unique(scores_df["關鍵TA"]))
-# scores_df = scores_df[scores_df["內外部"] == inside_outside_filter].reset_index(drop=True)
-# scores_df = scores_df[scores_df["關鍵TA"] == ta_filter].reset_index(drop=True)
-
-option = st.selectbox(
-    "選擇視覺化圖表",
-    (
-        "外部關鍵TA的特質常態分佈",
-        "內外部關鍵TA的特質雷達圖",
-    ),
-    index=None,
-    placeholder="選擇視覺化圖表",
-)
-if option == "外部關鍵TA的特質常態分佈":
-    st.markdown("## 外部關鍵TA的特質常態分佈")
-    radar_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧"]
-    distribution = Visualization("distribution", scores_df, radar_features)
-
-if option == "內外部關鍵TA的特質雷達圖":
-
-    def get_median_df(df):
-        try:
-            if df["關鍵TA"].unique()[0] == "關鍵TA":
-                key = "關鍵TA中間值"
-            else:
-                key = "非關鍵TA中間值"
-            key = "外部" + key if df["內外部"].unique()[0] == "外部" else "內部" + key
-            avg_inside_features = df[inside_features].median()
-            avg_outside_features = df[outside_features].median()
-            avg_ta = pd.Series(
-                [key]
-                + [None] * (len(meta_features) - 1)
-                + avg_inside_features.tolist()
-                + avg_outside_features.tolist()
-                + [key],
-                index=["受訪者"]
-                + meta_features[1:]
-                + inside_features
-                + outside_features
-                + [target],
-            )
-        except Exception as e:
-            avg_ta = pd.Series([0.0] * len(df.columns), index=df.columns)
-        return avg_ta.to_frame().transpose()
-
-    st.markdown("## 六大指標雷達圖")
-    placeholder = st.empty()
-    with placeholder.container():
         st.markdown("### 內在指標中間值")
         is1, is2, is3, is4, is5, is6 = st.columns(6)
         metrics = get_median_df(scores_df)
@@ -150,3 +93,75 @@ if option == "內外部關鍵TA的特質雷達圖":
         os4.metric("私人企業工作經驗", metrics["私人企業工作經驗"].values[0])
         os5.metric("量化求職考量", metrics["量化求職考量"].values[0])
         os6.metric("先天後天", metrics["先天後天"].values[0])
+
+    def generate_distribution(self, df: pd.DataFrame, features: List[str]):
+        dist_df = df.copy()
+        color_dict = {"T": "red", "F": "blue"}
+        for feature in features:
+            num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
+
+            fig = px.histogram(
+                dist_df,
+                x=feature,
+                marginal="box",
+                title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
+                nbins=num_bins,
+                color="關鍵TA",
+                color_discrete_map=color_dict,
+            )
+
+            fig.update_layout(
+                xaxis=dict(tickmode="linear", tick0=dist_df[feature].min(), dtick=1)
+            )
+
+            fig.update_traces(opacity=0.75)
+            st.plotly_chart(fig, use_container_width=True)
+
+
+# dashboard title
+st.title(":potable_water: :blue[_若水_]身障就業資料分析")
+
+
+scores_df = read_data(dataset_url)
+# inside_outside_filter = st.selectbox("選擇內外部", pd.unique(scores_df["內外部"]))
+# ta_filter = st.selectbox("選擇關鍵TA", pd.unique(scores_df["關鍵TA"]))
+# scores_df = scores_df[scores_df["內外部"] == inside_outside_filter].reset_index(drop=True)
+# scores_df = scores_df[scores_df["關鍵TA"] == ta_filter].reset_index(drop=True)
+
+placeholder = st.empty()
+with placeholder.container():
+    fig_col1, fig_col2, fig_col3 = st.columns(3, gap="large")
+    with fig_col1:
+        st.markdown("## :dart: 定位")
+        option = st.selectbox(
+            "視覺化圖表",
+            (
+                "外部關鍵TA的特質常態分佈",
+                "內外部關鍵TA的特質雷達圖",
+            ),
+            index=None,
+            placeholder="選擇視覺化圖表",
+        )
+        if option == "外部關鍵TA的特質常態分佈":
+            radar_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧"]
+            distribution = Visualization("distribution", scores_df, radar_features)
+        if option == "內外部關鍵TA的特質雷達圖":
+            radar_charts = Visualization("personality")
+
+    with fig_col2:
+        st.markdown("## :pinching_hand: 篩選")
+        option = st.selectbox(
+            "視覺化圖表",
+            ("foo",),
+            index=None,
+            placeholder="選擇視覺化圖表",
+        )
+
+    with fig_col3:
+        st.markdown("## :books: 管道")
+        option = st.selectbox(
+            "視覺化圖表",
+            ("bar",),
+            index=None,
+            placeholder="選擇視覺化圖表",
+        )
