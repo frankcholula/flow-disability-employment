@@ -49,6 +49,7 @@ class Visualization:
             "disability": self.generate_disability_histogram,
             "education": self.generate_education_histogram,
             "job_consideration": self.generate_job_consideration_histogram,
+            "job_channel": self.generate_job_channel_histogram,
         }
 
         init_func = dispatcher.get(vis)
@@ -393,6 +394,45 @@ class Visualization:
             )
         st.plotly_chart(fig, use_container_width=True)
 
+    def generate_job_channel_histogram(self, df, title="問卷求職管道"):
+        my_df = df.copy()
+        ta_df = my_df[my_df["關鍵TA"] == "T"]
+        nonta_df = my_df[my_df["關鍵TA"] == "F"]
+        # Count job considerations for both subsets
+        jc_true = ta_df["問卷求職管道"].str.split("、").explode().str.strip()
+        jc_false = nonta_df["問卷求職管道"].str.split("、").explode().str.strip()
+        jc_counts_true = pd.Series(Counter(jc_true)).reset_index()
+        jc_counts_false = pd.Series(Counter(jc_false)).reset_index()
+        jc_counts_true.columns = ["問卷求職管道", "人數"]
+        jc_counts_false.columns = ["問卷求職管道", "人數"]
+        jc_counts_true["關鍵TA"] = "是"
+        jc_counts_false["關鍵TA"] = "否"
+        combined_counts_with_key_TA = pd.concat([jc_counts_true, jc_counts_false])
+        total_counts = (
+            combined_counts_with_key_TA.groupby("問卷求職管道")["人數"].sum().reset_index()
+        )
+
+        fig = px.bar(
+            combined_counts_with_key_TA,
+            x="問卷求職管道",
+            y="人數",
+            color="關鍵TA",
+            title=title,
+            labels={"人數": "人數", "問卷求職管道": "問卷求職管道", "關鍵TA": "關鍵TA"},
+            color_discrete_sequence=["red", "blue"],
+        )
+
+        # Add text annotations for total counts
+        for i, row in total_counts.iterrows():
+            fig.add_annotation(
+                x=row["問卷求職管道"],
+                y=row["人數"],
+                text=str(row["人數"]),
+                showarrow=True,
+                font=dict(size=12, color="black"),
+            )
+        st.plotly_chart(fig, use_container_width=True)
+
 
 # dashboard title
 st.title(":potable_water: :blue[若水]身障就業資料分析")
@@ -491,4 +531,4 @@ with placeholder.container():
         if option == "訪談者求職考量":
             job_consideration = Visualization("job_consideration", scores_df)
         if option == "問卷求職管道":
-            pass
+            job_channel = Visualization("job_channel", scores_df)
