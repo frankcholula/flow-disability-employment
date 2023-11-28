@@ -42,6 +42,7 @@ class Visualization:
     def __init__(self, vis, *args):
         self.vis = vis
         dispatcher = {
+            "wordcloud": self.generate_wordcloud,
             "personality": self.generate_all_radar_charts,
             "distribution": self.generate_distribution,
             "median": self.generate_median_radar_chart,
@@ -57,6 +58,9 @@ class Visualization:
             raise ValueError(f"Uknown visualization type: {vis}")
         else:
             init_func(*args)
+
+    def generate_wordcloud(self, text):
+        pass
 
     def generate_median_radar_chart(self, df, features):
         def get_median_df(df):
@@ -266,7 +270,7 @@ class Visualization:
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_")
         st.markdown("### 結論")
-        st.text("1. 自我身心照顧與每向內在特質有高度相關性，所以很重要的外在指標")
+        st.text("1. 自我身心照顧與每向內在特質有高度相關性，所以是很重要的外在指標")
         st.text("2. 量化求職考量與解決問題意願和基本溝通表達是高相關")
         st.text("3. 家人支持程度與美向內在特質是中度相關")
 
@@ -455,11 +459,13 @@ with placeholder.container():
         st.header(":dart: 定位")
         option = st.selectbox(
             "視覺化六大特質",
-            ("外部關鍵TA的特質常態分佈", "內外部關鍵TA的特質雷達圖", "內外部關鍵TA的特質中間值"),
+            ("外部關鍵TA的特質常態分佈", "內外部關鍵TA的特質雷達圖", "內外部關鍵TA的特質中間值", "六大特質訪談文字雲"),
             index=None,
             placeholder="選擇視覺化圖表",
         )
         radar_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧"]
+        if option == "六大特質訪談文字雲":
+            wordcloud = Visualization("wordcloud", "test")
         if option == "外部關鍵TA的特質常態分佈":
             distribution = Visualization("distribution", scores_df, radar_features)
         if option == "內外部關鍵TA的特質雷達圖":
