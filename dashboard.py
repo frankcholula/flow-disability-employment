@@ -235,7 +235,7 @@ class Visualization:
             fig.update_traces(opacity=0.75)
             st.plotly_chart(fig, use_container_width=True)
         st.markdown("### 結論")
-        st.text("依照六大特質加總結果，定義出判別關鍵 TA 的標準線，為總分18分以上。（滿分23分）")
+        st.text("1. 依照六大特質加總結果，定義出判別關鍵 TA 的標準線，為總分18分以上。（滿分23分）")
 
     def generate_correlation_matrix(
         self,
