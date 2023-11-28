@@ -54,29 +54,31 @@ class Visualization:
         return
 
     def generate_distribution(self, df: pd.DataFrame, features: List[str]):
-        dist_df = df.copy()
-        color_dict = {"T": "red", "F": "blue"}
+        placeholder = st.empty()
+        with placeholder.container():
+            dist_df = df.copy()
+            color_dict = {"T": "red", "F": "blue"}
 
-        for feature in features:
-            num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
+            for feature in features:
+                num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
 
-            fig = px.histogram(
-                dist_df,
-                x=feature,
-                marginal="box",
-                title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
-                nbins=num_bins,
-                color="關鍵TA",
-                color_discrete_map=color_dict,
-            )
+                fig = px.histogram(
+                    dist_df,
+                    x=feature,
+                    marginal="box",
+                    title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
+                    nbins=num_bins,
+                    color="關鍵TA",
+                    color_discrete_map=color_dict,
+                )
 
-            fig.update_layout(
-                xaxis=dict(tickmode="linear", tick0=dist_df[feature].min(), dtick=1)
-            )
+                fig.update_layout(
+                    xaxis=dict(tickmode="linear", tick0=dist_df[feature].min(), dtick=1)
+                )
 
-            fig.update_traces(opacity=0.75)
+                fig.update_traces(opacity=0.75)
 
-            st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True)
 
 
 # dashboard title
