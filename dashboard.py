@@ -43,7 +43,7 @@ class Visualization:
         dispatcher = {
             "personality": self.generate_all_radar_charts,
             "distribution": self.generate_distribution,
-            "median": self.generate_medium_radar_chart,
+            "median": self.generate_median_radar_chart,
         }
 
         init_func = dispatcher.get(vis)
@@ -55,10 +55,10 @@ class Visualization:
             else:
                 init_func(*args)
 
-    def generate_medium_radar_chart(self, df, features):
+    def generate_median_radar_chart(self, df, features):
         def get_median_df(df):
             try:
-                if df["關鍵TA"].unique()[0] == "關鍵TA":
+                if df["關鍵TA"].unique()[0] == "T":
                     key = "關鍵TA中間值"
                 else:
                     key = "非關鍵TA中間值"
@@ -81,18 +81,24 @@ class Visualization:
                 avg_ta = pd.Series([0.0] * len(df.columns), index=df.columns)
             return avg_ta.to_frame().transpose()
 
+        median_col1, median_col2 = st.columns(2)
+        with median_col1:
+            inside_outside_filter = st.selectbox("選擇內外部", pd.unique(df["內外部"]))
+        with median_col2:
+            ta_filter = st.selectbox("選擇關鍵TA", pd.unique(df["關鍵TA"]))
+        df = df[df["內外部"] == inside_outside_filter].reset_index(drop=True)
+        df = df[df["關鍵TA"] == ta_filter].reset_index(drop=True)
         st.markdown("### 六大指標中間值")
         metrics = get_median_df(df)
+        print(metrics)
         is1, is2, is3, is4, is5, is6 = st.columns(6)
-
-        self.generate_all_radar_charts(metrics, radar_features, 2, 0.01, 1)
-
         is1.metric("工作意願和動機", int(metrics["工作意願和動機"].values[0]))
         is2.metric("學習動力", int(metrics["學習動力"].values[0]))
         is3.metric("基本溝通表達", int(metrics["基本溝通表達"].values[0]))
         is4.metric("工作責任感", int(metrics["工作責任感"].values[0]))
         is5.metric("解決問題意願", int(metrics["解決問題意願"].values[0]))
         is6.metric("自我身心照顧", int(metrics["自我身心照顧"].values[0]))
+        self.generate_all_radar_charts(metrics, radar_features, 2, 0.01, 1)
 
     def generate_all_radar_charts(
         self,
@@ -102,19 +108,6 @@ class Visualization:
         vertical_spacing=0.07,
         horizontal_spacing=0.6,
     ):
-        MAX_VALUES = {
-            "工作意願和動機": 5,
-            "學習動力": 3,
-            "基本溝通表達": 3,
-            "工作責任感": 3,
-            "解決問題意願": 3,
-            "社群和社交活動": 3,
-            "家人支持程度": 5,
-            "私人企業工作經驗": 1,
-            "量化求職考量": 3,
-            "先天後天": 1,
-            "自我身心照顧": 6,
-        }
         n_rows = math.ceil(len(df) / charts_per_row)
         # Create a subplot layout
         fig = make_subplots(
@@ -128,7 +121,19 @@ class Visualization:
 
         layout_update = {}
         features_closed = features[0:] + [features[0]]
-
+        MAX_VALUES = {
+            "工作意願和動機": 5,
+            "學習動力": 3,
+            "基本溝通表達": 3,
+            "工作責任感": 3,
+            "解決問題意願": 3,
+            "社群和社交活動": 3,
+            "家人支持程度": 5,
+            "私人企業工作經驗": 1,
+            "量化求職考量": 3,
+            "先天後天": 1,
+            "自我身心照顧": 6,
+        }
         for index, row in df.iterrows():
             row_normalized = {col: row[col] / MAX_VALUES[col] for col in features[0:]}
             row_normalized_list = list(row_normalized.values()) + [
