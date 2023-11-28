@@ -234,6 +234,8 @@ class Visualization:
 
             fig.update_traces(opacity=0.75)
             st.plotly_chart(fig, use_container_width=True)
+        st.markdown("### 結論")
+        st.text("依照六大特質加總結果，定義出判別關鍵 TA 的標準線，為總分18分以上。（滿分23分）")
 
     def generate_correlation_matrix(
         self,
@@ -431,6 +433,12 @@ class Visualization:
                 font=dict(size=12, color="black"),
             )
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown("### 結論")
+        st.text("1. 無論是求職管道總人數(20人)，以及招募管道有效性(12人，60%)皆以網路人力銀行為最高")
+        st.text("2. 招募管效性次高為社群貼文（4人，57%）")
+        st.text("3. 根據實際訪談與求職管道比對後，發現關鍵 TA 並非集中存在「與該障別直接相關」的傷友支持社群或非營利組織")
+        st.text("4. 相對來說，他們多聚集於興趣、自我挑戰導向的私密社群，例：輪椅夢公園群組")
+        st.text("5. 未來可強化連結同性質社群，提升關鍵TA觸及率，例：身心障礙潛水協會")
 
 
 # dashboard title
