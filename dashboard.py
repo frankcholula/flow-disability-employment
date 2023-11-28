@@ -493,6 +493,7 @@ class Visualization:
 
     def generate_model_performance(self):
         @ignore_warnings(category=ConvergenceWarning)
+        @st.cache_data
         def logistic_regression_bootstrap(
             df,
             features,
@@ -544,6 +545,7 @@ class Visualization:
             st.pyplot(fig)
             return classifier, bootstrap_accuracies
 
+        @st.cache_data
         def svm_bootstrap(
             df,
             features,

@@ -1,6 +1,7 @@
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import jieba
+import streamlit as st
 from typing import List
 
 工作責任感 = """
@@ -389,6 +390,7 @@ class TraditionalChineseStopWords:
 stop_words = set(TraditionalChineseStopWords.stop_words)
 
 
+@st.cache_data
 def generate_wordcloud(text):
     tokens = jieba.cut(text, cut_all=False)
     filtered_tokens = [word for word in tokens if word not in stop_words]
