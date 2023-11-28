@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 
 from typing import List
@@ -44,6 +45,7 @@ class Visualization:
             "personality": self.generate_all_radar_charts,
             "distribution": self.generate_distribution,
             "median": self.generate_median_radar_chart,
+            "correlation": self.generate_correlation_matrix,
         }
 
         init_func = dispatcher.get(vis)
@@ -209,7 +211,6 @@ class Visualization:
     def generate_distribution(self, df: pd.DataFrame, features: List[str]):
         dist_df = df.copy()
         dist_df = dist_df[dist_df["內外部"] == "外部"].reset_index(drop=True)
-        color_dict = {"T": "red", "F": "blue"}
         for feature in features:
             num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
 
@@ -220,7 +221,7 @@ class Visualization:
                 title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
                 nbins=num_bins,
                 color="關鍵TA",
-                color_discrete_map=color_dict,
+                color_discrete_sequence=["red", "blue"],
             )
 
             fig.update_layout(
@@ -229,6 +230,32 @@ class Visualization:
 
             fig.update_traces(opacity=0.75)
             st.plotly_chart(fig, use_container_width=True)
+
+    def generate_correlation_matrix(
+        self,
+        df: pd.DataFrame,
+        features: List[str],
+        title="Spearman's Rho 特質相關度",
+        xaxis="外在特質",
+        yaxis="內在特質",
+    ):
+        corr_df = df.copy()
+        corr_mx = corr_df[corr_features].corr(method="kendall")
+        fig = ff.create_annotated_heatmap(
+            z=corr_mx.values,
+            x=list(corr_mx.columns),
+            y=list(corr_mx.index),
+            annotation_text=corr_mx.round(2).values,
+            colorscale="Viridis",
+            showscale=True,
+            hoverinfo="z",
+        )
+        fig.update_layout(
+            title=title,
+            xaxis=dict(title=xaxis, side="bottom"),
+            yaxis=dict(title=yaxis),
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 
 # dashboard title
@@ -243,7 +270,7 @@ with placeholder.container():
     with fig_col1:
         st.markdown("## :dart: 定位")
         option = st.selectbox(
-            "視覺化圖表",
+            "視覺化六大特質",
             ("外部關鍵TA的特質常態分佈", "內外部關鍵TA的特質雷達圖", "內外部關鍵TA的特質中間值"),
             index=None,
             placeholder="選擇視覺化圖表",
@@ -291,17 +318,29 @@ with placeholder.container():
     with fig_col2:
         st.markdown("## :pinching_hand: 篩選")
         option = st.selectbox(
-            "視覺化圖表",
-            ("foo",),
+            "視覺化建模與特質篩選",
+            (
+                "關鍵TA相關矩陣",
+                "利用特質建模預測關鍵TA",
+            ),
             index=None,
             placeholder="選擇視覺化圖表",
         )
 
+        if option == "關鍵TA相關矩陣":
+            corr_features = inside_features + outside_features
+            correlation_matrix = Visualization("correlation", scores_df, corr_features)
+
     with fig_col3:
         st.markdown("## :books: 管道")
         option = st.selectbox(
-            "視覺化圖表",
-            ("bar",),
+            "視覺化求職管道與考量",
+            (
+                "問卷學歷",
+                "障別分析",
+                "求職考量",
+                "問卷求職管道",
+            ),
             index=None,
             placeholder="選擇視覺化圖表",
         )
