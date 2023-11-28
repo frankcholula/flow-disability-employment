@@ -90,7 +90,6 @@ class Visualization:
         df = df[df["關鍵TA"] == ta_filter].reset_index(drop=True)
         st.markdown("### 六大指標中間值")
         metrics = get_median_df(df)
-        print(metrics)
         is1, is2, is3, is4, is5, is6 = st.columns(6)
         is1.metric("工作意願和動機", int(metrics["工作意願和動機"].values[0]))
         is2.metric("學習動力", int(metrics["學習動力"].values[0]))
@@ -98,7 +97,7 @@ class Visualization:
         is4.metric("工作責任感", int(metrics["工作責任感"].values[0]))
         is5.metric("解決問題意願", int(metrics["解決問題意願"].values[0]))
         is6.metric("自我身心照顧", int(metrics["自我身心照顧"].values[0]))
-        self.generate_all_radar_charts(metrics, radar_features, 2, 0.01, 1)
+        self.generate_all_radar_charts(metrics, radar_features, 1, 0, 1)
 
     def generate_all_radar_charts(
         self,
@@ -108,19 +107,6 @@ class Visualization:
         vertical_spacing=0.07,
         horizontal_spacing=0.6,
     ):
-        n_rows = math.ceil(len(df) / charts_per_row)
-        # Create a subplot layout
-        fig = make_subplots(
-            rows=n_rows,
-            cols=charts_per_row,
-            specs=[[{"type": "polar"}] * charts_per_row] * n_rows,
-            subplot_titles=(df.受訪者),
-            vertical_spacing=vertical_spacing,
-            horizontal_spacing=horizontal_spacing,
-        )
-
-        layout_update = {}
-        features_closed = features[0:] + [features[0]]
         MAX_VALUES = {
             "工作意願和動機": 5,
             "學習動力": 3,
@@ -134,34 +120,57 @@ class Visualization:
             "先天後天": 1,
             "自我身心照顧": 6,
         }
+        n_rows = math.ceil(len(df) / charts_per_row)
         for index, row in df.iterrows():
             row_normalized = {col: row[col] / MAX_VALUES[col] for col in features[0:]}
             row_normalized_list = list(row_normalized.values()) + [
                 list(row_normalized.values())[0]
             ]
+        features_closed = features[0:] + [features[0]]
 
-            subplot_row = index // charts_per_row + 1
-            subplot_col = index % charts_per_row + 1
-            polar_name = f"polar{index+1}"
-            layout_update[polar_name] = dict(radialaxis=dict(showticklabels=False))
-
-            fig.add_trace(
-                go.Scatterpolar(
-                    name=row.受訪者,
-                    r=row_normalized_list,
-                    theta=features_closed,
-                    fill="toself",
-                    showlegend=False,
-                ),
-                row=subplot_row,
-                col=subplot_col,
+        # Create a subplot layout
+        if charts_per_row > 1:
+            fig = make_subplots(
+                rows=n_rows,
+                cols=charts_per_row,
+                specs=[[{"type": "polar"}] * charts_per_row] * n_rows,
+                subplot_titles=(df.受訪者),
+                vertical_spacing=vertical_spacing,
+                horizontal_spacing=horizontal_spacing,
             )
 
-        # Update layout to remove radial tick labels and adjust layout
-        fig.update_layout(
-            **layout_update, margin=dict(t=50, b=50, l=100, r=100), height=1000
-        )
-        fig.update_polars(radialaxis=dict(range=[0, 1]))
+            layout_update = {}
+
+            for index, row in df.iterrows():
+                subplot_row = index // charts_per_row + 1
+                subplot_col = index % charts_per_row + 1
+                polar_name = f"polar{index+1}"
+                layout_update[polar_name] = dict(radialaxis=dict(showticklabels=False))
+
+                fig.add_trace(
+                    go.Scatterpolar(
+                        name=row.受訪者,
+                        r=row_normalized_list,
+                        theta=features_closed,
+                        fill="toself",
+                        showlegend=False,
+                    ),
+                    row=subplot_row,
+                    col=subplot_col,
+                )
+
+            # Update layout to remove radial tick labels and adjust layout
+            fig.update_layout(
+                **layout_update, margin=dict(t=50, b=50, l=100, r=100), height=1000
+            )
+            fig.update_polars(radialaxis=dict(range=[0, 1]))
+        else:
+            fig = px.line_polar(
+                df,
+                r=row_normalized_list,
+                theta=features_closed,
+            )
+            fig.update_traces(fill="toself")
 
         st.plotly_chart(fig, use_container_width=True)
 
