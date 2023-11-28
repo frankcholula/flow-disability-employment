@@ -487,7 +487,6 @@ class Visualization:
             n_bootstraps=500,
             title="Bootstrapped",
         ):
-            # df = scores_df.copy()
             X_train, X_test, y_train, y_test = train_test_split(
                 df[features], df[target], test_size=test_size, random_state=random_state
             )
@@ -539,7 +538,6 @@ class Visualization:
             n_bootstraps=500,
             title="Bootstrapped Accuracies Distribution",
         ):
-            # df = scores_df.copy()
             X_train, X_test, y_train, y_test = train_test_split(
                 df[features], df[target], test_size=test_size, random_state=random_state
             )
@@ -752,20 +750,3 @@ with placeholder.container():
             job_consideration = Visualization("job_consideration", scores_df)
         if option == "問卷求職管道":
             job_channel = Visualization("job_channel", scores_df)
-
-
-# Load the dataset
-
-
-# lrm1, bootstrap_accuracies = logistic_regression_bootstrap(
-#     scores_df, inside_features, n_bootstraps=500, title="LR Inside Distribution"
-# )
-# lrm2, bootstrap_accuracies = logistic_regression_bootstrap(
-#     scores_df, outside_features, n_bootstraps=500, title="LR Outside Distribution"
-# )
-# lrm3, bootstrap_accuracies = logistic_regression_bootstrap(
-#     scores_df,
-#     inside_features + outside_features,
-#     n_bootstraps=500,
-#     title="LR Inside + Outside Distribution",
-# )
