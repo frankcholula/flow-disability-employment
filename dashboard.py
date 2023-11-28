@@ -20,6 +20,7 @@ from sklearn.exceptions import ConvergenceWarning
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+from interview_wordcloud import generate_wordcloud
 
 dataset_url = "https://raw.githubusercontent.com/frankcholula/flow-disability-employment/main/data/scores.csv"
 
@@ -484,7 +485,7 @@ class Visualization:
             target="關鍵TA",
             test_size=0.2,
             random_state=42,
-            n_bootstraps=500,
+            n_bootstraps=200,
             title="Bootstrapped",
         ):
             X_train, X_test, y_train, y_test = train_test_split(
@@ -535,7 +536,7 @@ class Visualization:
             target="關鍵TA",
             test_size=0.2,
             random_state=42,
-            n_bootstraps=500,
+            n_bootstraps=200,
             title="Bootstrapped Accuracies Distribution",
         ):
             X_train, X_test, y_train, y_test = train_test_split(
