@@ -38,7 +38,7 @@ def read_data(file_path) -> pd.DataFrame:
 class Visualization:
     """_summary_"""
 
-    def __init__(self, vis, *args, **kwargs):
+    def __init__(self, vis, *args):
         self.vis = vis
         dispatcher = {
             "personality": self.generate_all_radar_charts,
@@ -50,10 +50,7 @@ class Visualization:
         if not init_func:
             raise ValueError(f"Uknown visualization type: {vis}")
         else:
-            if vis == "distribution":
-                init_func(*args)
-            else:
-                init_func(*args)
+            init_func(*args)
 
     def generate_median_radar_chart(self, df, features):
         def get_median_df(df):
@@ -211,6 +208,7 @@ class Visualization:
 
     def generate_distribution(self, df: pd.DataFrame, features: List[str]):
         dist_df = df.copy()
+        dist_df = dist_df[dist_df["內外部"] == "外部"].reset_index(drop=True)
         color_dict = {"T": "red", "F": "blue"}
         for feature in features:
             num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
