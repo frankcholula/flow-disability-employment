@@ -1,9 +1,13 @@
 # import pandas as pd
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 from typing import List
+import math
 
 dataset_url = "https://raw.githubusercontent.com/frankcholula/flow-disability-employment/main/data/scores.csv"
 
@@ -37,7 +41,7 @@ class Visualization:
     def __init__(self, vis, *args, **kwargs):
         self.vis = vis
         dispatcher = {
-            "personality": self.generate_radar_chart,
+            "personality": self.generate_radar_charts,
             "distribution": self.generate_distribution,
         }
 
@@ -48,9 +52,72 @@ class Visualization:
             if vis == "distribution":
                 init_func(*args)
             else:
-                init_func()
+                init_func(*args)
 
-    def generate_radar_chart(self):
+    def generate_radar_charts(
+        self,
+        df,
+        features,
+        charts_per_row,
+    ):
+        MAX_VALUES = {
+            "工作意願和動機": 5,
+            "學習動力": 3,
+            "基本溝通表達": 3,
+            "工作責任感": 3,
+            "解決問題意願": 3,
+            "社群和社交活動": 3,
+            "家人支持程度": 5,
+            "私人企業工作經驗": 1,
+            "量化求職考量": 3,
+            "先天後天": 1,
+            "自我身心照顧": 6,
+        }
+        n_rows = math.ceil(len(df) / charts_per_row)
+        # Create a subplot layout
+        fig = make_subplots(
+            rows=n_rows,
+            cols=charts_per_row,
+            specs=[[{"type": "polar"}] * charts_per_row] * n_rows,
+            subplot_titles=(df.受訪者),
+        )
+
+        layout_update = {}
+        features_closed = features[0:] + [features[0]]
+
+        for index, row in df.iterrows():
+            row_normalized = {col: row[col] / MAX_VALUES[col] for col in features[0:]}
+            row_normalized_list = list(row_normalized.values()) + [
+                list(row_normalized.values())[0]
+            ]
+
+            subplot_row = index // charts_per_row + 1
+            subplot_col = index % charts_per_row + 1
+            polar_name = f"polar{index+1}"
+            layout_update[polar_name] = dict(radialaxis=dict(showticklabels=False))
+
+            fig.add_trace(
+                go.Scatterpolar(
+                    name=row.受訪者,
+                    r=row_normalized_list,
+                    theta=features_closed,
+                    fill="toself",
+                    showlegend=False,
+                ),
+                row=subplot_row,
+                col=subplot_col,
+            )
+
+        # Update layout to remove radial tick labels and adjust layout
+        fig.update_layout(
+            **layout_update,
+            margin=dict(t=50, b=50, l=100, r=100),
+            height=1000,
+        )
+        fig.update_polars(radialaxis=dict(range=[0, 1]))
+
+        st.plotly_chart(fig, use_container_width=True)
+
         def get_median_df(df):
             try:
                 if df["關鍵TA"].unique()[0] == "關鍵TA":
@@ -123,10 +190,6 @@ st.title(":potable_water: :blue[_若水_]身障就業資料分析")
 
 
 scores_df = read_data(dataset_url)
-# inside_outside_filter = st.selectbox("選擇內外部", pd.unique(scores_df["內外部"]))
-# ta_filter = st.selectbox("選擇關鍵TA", pd.unique(scores_df["關鍵TA"]))
-# scores_df = scores_df[scores_df["內外部"] == inside_outside_filter].reset_index(drop=True)
-# scores_df = scores_df[scores_df["關鍵TA"] == ta_filter].reset_index(drop=True)
 
 placeholder = st.empty()
 with placeholder.container():
@@ -142,11 +205,43 @@ with placeholder.container():
             index=None,
             placeholder="選擇視覺化圖表",
         )
+        radar_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧"]
         if option == "外部關鍵TA的特質常態分佈":
-            radar_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧"]
             distribution = Visualization("distribution", scores_df, radar_features)
         if option == "內外部關鍵TA的特質雷達圖":
-            radar_charts = Visualization("personality")
+            filter_col1, filter_col2 = st.columns(2)
+            with filter_col1:
+                inside_outside_filter = st.selectbox(
+                    "選擇內外部", pd.unique(scores_df["內外部"])
+                )
+            if inside_outside_filter == "外部":
+                with filter_col2:
+                    ta_filter = st.selectbox("選擇關鍵TA", pd.unique(scores_df["關鍵TA"]))
+                radar_df = scores_df.copy()
+                radar_df = radar_df[
+                    radar_df["內外部"] == inside_outside_filter
+                ].reset_index(drop=True)
+                radar_df = radar_df[radar_df["關鍵TA"] == ta_filter].reset_index(
+                    drop=True
+                )
+
+                radar_charts = Visualization(
+                    "personality",
+                    radar_df,
+                    radar_features,
+                    2,
+                )
+            else:
+                radar_df = scores_df.copy()
+                radar_df = radar_df[
+                    radar_df["內外部"] == inside_outside_filter
+                ].reset_index(drop=True)
+                radar_charts = Visualization(
+                    "personality",
+                    radar_df,
+                    radar_features,
+                    2,
+                )
 
     with fig_col2:
         st.markdown("## :pinching_hand: 篩選")
