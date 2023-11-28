@@ -55,6 +55,8 @@ class Visualization:
 
     def generate_distribution(self, df: pd.DataFrame, features: List[str]):
         dist_df = df.copy()
+        color_dict = {"T": "red", "F": "blue"}
+
         for feature in features:
             num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
 
@@ -65,12 +67,14 @@ class Visualization:
                 title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
                 nbins=num_bins,
                 color="關鍵TA",
+                color_discrete_map=color_dict,
             )
 
-            # Update x-axis to show integer ticks
             fig.update_layout(
                 xaxis=dict(tickmode="linear", tick0=dist_df[feature].min(), dtick=1)
             )
+
+            fig.update_traces(opacity=0.75)
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -86,8 +90,8 @@ scores_df = read_data(dataset_url)
 option = st.selectbox(
     "選擇視覺化圖表",
     (
-        "內外部關鍵TA的特質雷達圖",
         "外部關鍵TA的特質常態分佈",
+        "內外部關鍵TA的特質雷達圖",
     ),
     index=None,
     placeholder="選擇視覺化圖表",
