@@ -613,28 +613,28 @@ class Visualization:
                         outside_df,
                         inside_features,
                         n_bootstraps=500,
-                        title="SVM模型利用內在特質",
+                        title="SVM Model Using Inside Features",
                     )
                 if features == "外在特質":
                     svm, bootstrap_accuracies = svm_bootstrap(
                         outside_df,
                         outside_features,
                         n_bootstraps=500,
-                        title="SVM模型利用外在特質",
+                        title="SVM Model Using Outside Features",
                     )
                 if features == "內+外在特質":
                     svm, bootstrap_accuracies = svm_bootstrap(
                         outside_df,
                         inside_features + outside_features,
                         n_bootstraps=500,
-                        title="SVM模型利用內+外在特質",
+                        title="SVM Model Using Inside and Outside Features",
                     )
                 if features == "PPSS":
                     svm, bootstrap_accuracies = svm_bootstrap(
                         outside_df,
                         ppss_features,
                         n_bootstraps=500,
-                        title="SVM模型用PPSS特質",
+                        title="SVM Model Using PPSS",
                     )
         if model == "Logistic Regression":
             with st.spinner("訓練中..."):
@@ -643,28 +643,28 @@ class Visualization:
                         outside_df,
                         inside_features,
                         n_bootstraps=500,
-                        title="LR模型利用內在特質",
+                        title="LR Model Using Inside Features",
                     )
                 if features == "外在特質":
                     lrm, bootstrap_accuracies = logistic_regression_bootstrap(
                         outside_df,
                         outside_features,
                         n_bootstraps=500,
-                        title="LR模型利用外在特質",
+                        title="LR Model Using Outside Features",
                     )
                 if features == "內+外在特質":
                     lrm, bootstrap_accuracies = logistic_regression_bootstrap(
                         outside_df,
                         inside_features + outside_features,
                         n_bootstraps=500,
-                        title="LR模型利用內+外在特質",
+                        title="LR Model Using Both Inside and Outside Features",
                     )
                 if features == "PPSS":
                     lrm, bootstrap_accuracies = logistic_regression_bootstrap(
                         outside_df,
                         ppss_features,
                         n_bootstraps=500,
-                        title="LR模型用PPSS特質",
+                        title="LR Model Using PPSS",
                     )
 
 
