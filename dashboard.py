@@ -262,9 +262,8 @@ class Visualization:
             yaxis=dict(title=yaxis),
         )
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown(
-            "_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_\n ### 結論  "
-        )
+        st.markdown("_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_")
+        st.markdown("### 結論")
         st.text("1. 自我身心照顧與每向內在特質有高度相關性，所以很重要的外在指標")
         st.text("2. 量化求職考量與解決問題意願和基本溝通表達是高相關")
         st.text("3. 家人支持程度與美向內在特質是中度相關")
