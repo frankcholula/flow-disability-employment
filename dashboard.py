@@ -41,8 +41,9 @@ class Visualization:
     def __init__(self, vis, *args, **kwargs):
         self.vis = vis
         dispatcher = {
-            "personality": self.generate_radar_charts,
+            "personality": self.generate_all_radar_charts,
             "distribution": self.generate_distribution,
+            "median": self.generate_medium_radar_chart,
         }
 
         init_func = dispatcher.get(vis)
@@ -54,11 +55,52 @@ class Visualization:
             else:
                 init_func(*args)
 
-    def generate_radar_charts(
+    def generate_medium_radar_chart(self, df, features):
+        def get_median_df(df):
+            try:
+                if df["關鍵TA"].unique()[0] == "關鍵TA":
+                    key = "關鍵TA中間值"
+                else:
+                    key = "非關鍵TA中間值"
+                key = "外部" + key if df["內外部"].unique()[0] == "外部" else "內部" + key
+                avg_inside_features = df[inside_features].median()
+                avg_outside_features = df[outside_features].median()
+                avg_ta = pd.Series(
+                    [key]
+                    + [None] * (len(meta_features) - 1)
+                    + avg_inside_features.tolist()
+                    + avg_outside_features.tolist()
+                    + [key],
+                    index=["受訪者"]
+                    + meta_features[1:]
+                    + inside_features
+                    + outside_features
+                    + [target],
+                )
+            except Exception as e:
+                avg_ta = pd.Series([0.0] * len(df.columns), index=df.columns)
+            return avg_ta.to_frame().transpose()
+
+        st.markdown("### 六大指標中間值")
+        metrics = get_median_df(df)
+        is1, is2, is3, is4, is5, is6 = st.columns(6)
+
+        self.generate_all_radar_charts(metrics, radar_features, 2, 0.01, 1)
+
+        is1.metric("工作意願和動機", int(metrics["工作意願和動機"].values[0]))
+        is2.metric("學習動力", int(metrics["學習動力"].values[0]))
+        is3.metric("基本溝通表達", int(metrics["基本溝通表達"].values[0]))
+        is4.metric("工作責任感", int(metrics["工作責任感"].values[0]))
+        is5.metric("解決問題意願", int(metrics["解決問題意願"].values[0]))
+        is6.metric("自我身心照顧", int(metrics["自我身心照顧"].values[0]))
+
+    def generate_all_radar_charts(
         self,
         df,
         features,
         charts_per_row,
+        vertical_spacing=0.07,
+        horizontal_spacing=0.6,
     ):
         MAX_VALUES = {
             "工作意願和動機": 5,
@@ -80,6 +122,8 @@ class Visualization:
             cols=charts_per_row,
             specs=[[{"type": "polar"}] * charts_per_row] * n_rows,
             subplot_titles=(df.受訪者),
+            vertical_spacing=vertical_spacing,
+            horizontal_spacing=horizontal_spacing,
         )
 
         layout_update = {}
@@ -110,56 +154,11 @@ class Visualization:
 
         # Update layout to remove radial tick labels and adjust layout
         fig.update_layout(
-            **layout_update,
-            margin=dict(t=50, b=50, l=100, r=100),
-            height=1000,
+            **layout_update, margin=dict(t=50, b=50, l=100, r=100), height=1000
         )
         fig.update_polars(radialaxis=dict(range=[0, 1]))
 
         st.plotly_chart(fig, use_container_width=True)
-
-        def get_median_df(df):
-            try:
-                if df["關鍵TA"].unique()[0] == "關鍵TA":
-                    key = "關鍵TA中間值"
-                else:
-                    key = "非關鍵TA中間值"
-                key = "外部" + key if df["內外部"].unique()[0] == "外部" else "內部" + key
-                avg_inside_features = df[inside_features].median()
-                avg_outside_features = df[outside_features].median()
-                avg_ta = pd.Series(
-                    [key]
-                    + [None] * (len(meta_features) - 1)
-                    + avg_inside_features.tolist()
-                    + avg_outside_features.tolist()
-                    + [key],
-                    index=["受訪者"]
-                    + meta_features[1:]
-                    + inside_features
-                    + outside_features
-                    + [target],
-                )
-            except Exception as e:
-                avg_ta = pd.Series([0.0] * len(df.columns), index=df.columns)
-            return avg_ta.to_frame().transpose()
-
-        st.markdown("### 內在指標中間值")
-        is1, is2, is3, is4, is5, is6 = st.columns(6)
-        metrics = get_median_df(scores_df)
-        is1.metric("工作意願和動機", metrics["工作意願和動機"].values[0])
-        is2.metric("學習動力", metrics["學習動力"].values[0])
-        is3.metric("基本溝通表達", metrics["基本溝通表達"].values[0])
-        is4.metric("工作責任感", metrics["工作責任感"].values[0])
-        is5.metric("解決問題意願", metrics["解決問題意願"].values[0])
-
-        st.markdown("### 外在指標中間值")
-        os1, os2, os3, os4, os5, os6 = st.columns(6)
-        os1.metric("社群和社交活動", metrics["社群和社交活動"].values[0])
-        os2.metric("自我身心照顧", metrics["自我身心照顧"].values[0])
-        os3.metric("家人支持程度", metrics["家人支持程度"].values[0])
-        os4.metric("私人企業工作經驗", metrics["私人企業工作經驗"].values[0])
-        os5.metric("量化求職考量", metrics["量化求職考量"].values[0])
-        os6.metric("先天後天", metrics["先天後天"].values[0])
 
     def generate_distribution(self, df: pd.DataFrame, features: List[str]):
         dist_df = df.copy()
@@ -198,10 +197,7 @@ with placeholder.container():
         st.markdown("## :dart: 定位")
         option = st.selectbox(
             "視覺化圖表",
-            (
-                "外部關鍵TA的特質常態分佈",
-                "內外部關鍵TA的特質雷達圖",
-            ),
+            ("外部關鍵TA的特質常態分佈", "內外部關鍵TA的特質雷達圖", "內外部關鍵TA的特質中間值"),
             index=None,
             placeholder="選擇視覺化圖表",
         )
@@ -242,6 +238,8 @@ with placeholder.container():
                     radar_features,
                     2,
                 )
+        if option == "內外部關鍵TA的特質中間值":
+            median_radar_chart = Visualization("median", scores_df, radar_features)
 
     with fig_col2:
         st.markdown("## :pinching_hand: 篩選")
