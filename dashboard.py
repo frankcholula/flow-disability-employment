@@ -20,12 +20,25 @@ from sklearn.exceptions import ConvergenceWarning
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from interview_wordcloud import generate_wordcloud
+from interview_wordcloud import (
+    generate_wordcloud,
+    工作責任感,
+    工作意願,
+    自我身心照顧,
+    日常興趣社交,
+    溝通表達,
+    學習動機,
+    家人支持,
+    解決問題意願,
+)
 
 dataset_url = "https://raw.githubusercontent.com/frankcholula/flow-disability-employment/main/data/scores.csv"
 
 # setting font for matplotlib
 matplotlib.rcParams["font.family"] = "Heiti TC"
+
+# supress pyplot warning
+st.set_option("deprecation.showPyplotGlobalUse", False)
 
 # 內在指標 + 外在指標 + PPSS指標
 inside_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願"]
@@ -74,7 +87,7 @@ class Visualization:
     def __init__(self, vis, *args):
         self.vis = vis
         dispatcher = {
-            "wordcloud": self.generate_wordcloud,
+            "wordcloud": self.generate_interview_wordcloud,
             "personality": self.generate_all_radar_charts,
             "distribution": self.generate_distribution,
             "median": self.generate_median_radar_chart,
@@ -92,8 +105,12 @@ class Visualization:
         else:
             init_func(*args)
 
-    def generate_wordcloud(self, text):
-        pass
+    def generate_interview_wordcloud(self, text):
+        wc = generate_wordcloud(text)
+        plt.imshow(wc, interpolation="bilinear")
+        plt.axis("off")
+        plt.show()
+        st.pyplot()
 
     def generate_median_radar_chart(self, df, features):
         def get_median_df(df):
@@ -665,13 +682,32 @@ with placeholder.container():
         st.header(":dart: 定位")
         option = st.selectbox(
             "視覺化六大特質",
-            ("外部關鍵TA的特質常態分佈", "內外部關鍵TA的特質雷達圖", "內外部關鍵TA的特質中間值", "六大特質訪談文字雲"),
+            ("外部關鍵TA的特質常態分佈", "內外部關鍵TA的特質雷達圖", "內外部關鍵TA的特質中間值", "特質訪談文字雲"),
             index=None,
             placeholder="選擇視覺化圖表",
         )
         radar_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧"]
-        if option == "六大特質訪談文字雲":
-            wordcloud = Visualization("wordcloud", "test")
+        if option == "特質訪談文字雲":
+            wc_col1, wc_col2 = st.columns(2)
+            with wc_col1:
+                feature_selection = st.selectbox(
+                    "選擇特質",
+                    ("工作責任感", "工作意願", "自我身心照顧", "學習動機", "溝通表達", "工作意願", "解決問題意願"),
+                )
+            feature_data = {
+                "工作責任感": 工作責任感,
+                "工作意願": 工作意願,
+                "自我身心照顧": 自我身心照顧,
+                "學習動機": 學習動機,
+                "溝通表達": 溝通表達,
+                "解決問題意願": 解決問題意願,
+            }
+
+            if feature_selection in feature_data:
+                with st.spinner("製圖中..."):
+                    wordcloud = Visualization(
+                        "wordcloud", feature_data[feature_selection]
+                    )
         if option == "外部關鍵TA的特質常態分佈":
             distribution = Visualization("distribution", scores_df, radar_features)
         if option == "內外部關鍵TA的特質雷達圖":
