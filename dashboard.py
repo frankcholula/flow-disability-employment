@@ -47,6 +47,7 @@ class Visualization:
             "median": self.generate_median_radar_chart,
             "correlation": self.generate_correlation_matrix,
             "disability": self.generate_disability_histogram,
+            "education": self.generate_education_histogram,
         }
 
         init_func = dispatcher.get(vis)
@@ -259,16 +260,105 @@ class Visualization:
             yaxis=dict(title=yaxis),
         )
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_")
+        st.markdown(
+            "_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_\n ### 結論  "
+        )
+        st.text("1. 自我身心照顧與每向內在特質有高度相關性，所以很重要的外在指標")
+        st.text("2. 量化求職考量與解決問題意願和基本溝通表達是高相關")
+        st.text("3. 家人支持程度與美向內在特質是中度相關")
 
-    def generate_disability_histogram(
-        self,
-    ):
-        pass
+    def generate_disability_histogram(self, df):
+        my_df = df.copy()
+        key_ta_df = my_df[my_df["關鍵TA"] == "T"]
+        nonkey_ta_df = my_df[my_df["關鍵TA"] == "F"]
+
+        key_ta_experience_distribution = key_ta_df["障別"].value_counts()
+        non_key_ta_experience_distribution = nonkey_ta_df["障別"].value_counts()
+
+        combined_data = pd.concat(
+            [
+                key_ta_experience_distribution.rename("是"),
+                non_key_ta_experience_distribution.rename("否"),
+            ],
+            axis=1,
+        ).fillna(0)
+
+        combined_data["Total"] = combined_data["是"] + combined_data["否"]
+        combined_data["Total"] = combined_data["Total"].astype(int)
+        combined_data = combined_data.reset_index().rename(
+            columns={"index": "Disability Type"}
+        )
+        combined_data.reset_index(inplace=True)
+        combined_data.rename(columns={"index": "Experience Type"}, inplace=True)
+        fig = px.bar(
+            combined_data,
+            x="障別",
+            y=["是", "否"],
+            barmode="stack",
+            title="障別分佈圖",
+            labels={"value": "人數", "variable": "關鍵TA?"},
+            color_discrete_sequence=["red", "blue"],
+        )
+        for i, total in enumerate(combined_data["Total"]):
+            fig.add_annotation(
+                x=combined_data["Experience Type"][i],
+                y=total,
+                text=str(total),
+                showarrow=False,
+                yshift=10,  # Adjust this value to position the annotation above the bar
+            )
+        st.plotly_chart(fig, use_container_width=True)
+
+    def generate_education_histogram(self, df):
+        my_df = df.copy()
+        key_ta_df = my_df[my_df["關鍵TA"] == "T"]
+        nonkey_ta_df = my_df[my_df["關鍵TA"] == "F"]
+
+        key_ta_experience_distribution = (
+            key_ta_df["問卷學歷"].str.split("、").explode().value_counts()
+        )
+        non_key_ta_experience_distribution = (
+            nonkey_ta_df["問卷學歷"].str.split("、").explode().value_counts()
+        )
+
+        combined_data = pd.concat(
+            [
+                key_ta_experience_distribution.rename("是"),
+                non_key_ta_experience_distribution.rename("否"),
+            ],
+            axis=1,
+        ).fillna(0)
+
+        combined_data["Total"] = combined_data["是"] + combined_data["否"]
+        combined_data["Total"] = combined_data["Total"].astype(int)
+        combined_data = combined_data.reset_index().rename(
+            columns={"index": "Experience Type"}
+        )
+        combined_data.reset_index(inplace=True)
+        combined_data.rename(columns={"index": "Experience Type"}, inplace=True)
+        fig = px.bar(
+            combined_data,
+            x="問卷學歷",
+            y=["是", "否"],
+            barmode="stack",
+            title="學歷分佈圖",
+            labels={"value": "人數", "variable": "關鍵TA?"},
+            color_discrete_sequence=["red", "blue"],
+        )
+        for i, total in enumerate(combined_data["Total"]):
+            fig.add_annotation(
+                x=combined_data["Experience Type"][i],
+                y=total,
+                text=str(total),
+                showarrow=False,
+                yshift=10,  # Adjust this value to position the annotation above the bar
+            )
+        st.plotly_chart(fig, use_container_width=True)
 
 
 # dashboard title
 st.title(":potable_water: :blue[_若水_]身障就業資料分析")
+st.text("『創造多元共﻿融環境是為了每一個人』，我們希望透過商業力量，協助企業和身障人才有效銜接，改善身障就業問題！")
 
 
 scores_df = read_data(dataset_url)
@@ -340,25 +430,28 @@ with placeholder.container():
             corr_features = inside_features + outside_features
             correlation_matrix = Visualization("correlation", scores_df, corr_features)
 
+        if option == "利用特質建模預測關鍵TA":
+            pass
+
     with fig_col3:
         st.markdown("## :books: 管道")
         option = st.selectbox(
             "視覺化求職管道與考量",
             (
-                "問卷學歷",
-                "障別分析",
-                "求職考量",
+                "訪談者問卷學歷",
+                "訪談者障別分析",
+                "訪談者求職考量",
                 "問卷求職管道",
             ),
             index=None,
             placeholder="選擇視覺化圖表",
         )
-        if option == "問卷學歷":
-            pass
-        if option == "障別分析":
-            visualization = Visualization("disability", scores_df)
+        if option == "訪談者問卷學歷":
+            education_dist = Visualization("education", scores_df)
+        if option == "訪談者障別分析":
+            disability_types = Visualization("disability", scores_df)
 
-        if option == "求職考量":
+        if option == "訪談者求職考量":
             pass
         if option == "問卷求職管道":
             pass
