@@ -1,4 +1,3 @@
-# import pandas as pd
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -9,6 +8,15 @@ from plotly.subplots import make_subplots
 from collections import Counter
 from typing import List
 import math
+
+# modeling specific packages
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from sklearn.utils import resample
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 dataset_url = "https://raw.githubusercontent.com/frankcholula/flow-disability-employment/main/data/scores.csv"
 
@@ -51,6 +59,7 @@ class Visualization:
             "education": self.generate_education_histogram,
             "job_consideration": self.generate_job_consideration_histogram,
             "job_channel": self.generate_job_channel_histogram,
+            "models": self.generate_model_performance,
         }
 
         init_func = dispatcher.get(vis)
@@ -444,6 +453,78 @@ class Visualization:
         st.text("4. 相對來說，他們多聚集於興趣、自我挑戰導向的私密社群，例：輪椅夢公園群組")
         st.text("5. 未來可強化連結同性質社群，提升關鍵TA觸及率，例：身心障礙潛水協會")
 
+    def generate_model_performance(self):
+        def svm_bootstrap(
+            df,
+            features,
+            target="關鍵TA",
+            test_size=0.2,
+            random_state=42,
+            n_bootstraps=100,
+            title="Bootstrapped Accuracies Distribution",
+        ):
+            # df = scores_df.copy()
+            X_train, X_test, y_train, y_test = train_test_split(
+                df[features], df[target], test_size=test_size, random_state=random_state
+            )
+
+            classifier = SVC(kernel="rbf", random_state=random_state)
+            classifier.fit(X_train, y_train)
+
+            # Predict on the testing data
+            y_test_pred = classifier.predict(X_test)
+
+            bootstrap_accuracies = []
+            # bootstrapping
+            for _ in range(n_bootstraps):
+                # TODO: wrap try catch here in case we get all TA's
+                X_train_boot, y_train_boot = resample(X_train, y_train)
+                classifier.fit(X_train_boot, y_train_boot)
+                # Predict on the original testing data
+                y_test_pred_boot = classifier.predict(X_test)
+                bootstrap_accuracies.append(accuracy_score(y_test, y_test_pred_boot))
+            bootstrap_accuracies = np.array(bootstrap_accuracies)
+            mean_accuracy = bootstrap_accuracies.mean()
+            std_dev_accuracy = bootstrap_accuracies.std()
+
+            # Plot the distribution of accuracies
+            len_training = len(X_train)
+            len_testing = len(X_test)
+            print(f"用{len_training}位訓練，{len_testing}位盲測")
+            fig = plt.figure(figsize=(10, 6))
+            sns.histplot(bootstrap_accuracies, kde=True)
+            plt.title(title)
+            plt.xlabel("Accuracy")
+            plt.ylabel("Frequency")
+            plt.axvline(
+                x=mean_accuracy,
+                color="red",
+                linestyle="--",
+                label=f"Mean Accuracy: {mean_accuracy:.2f}",
+            )
+            plt.legend()
+            st.pyplot(fig)
+            return classifier, bootstrap_accuracies
+
+        svm, bootstrap_accuracies = svm_bootstrap(
+            scores_df,
+            inside_features,
+            n_bootstraps=500,
+            title="SVM Inside Distribution",
+        )
+        svm, bootstrap_accuracies = svm_bootstrap(
+            scores_df,
+            outside_features,
+            n_bootstraps=500,
+            title="SVM Outside Distribution",
+        )
+        svm, bootstrap_accuracies = svm_bootstrap(
+            scores_df,
+            inside_features + outside_features,
+            n_bootstraps=500,
+            title="SVM Inside + Outside Distribution",
+        )
+
 
 # dashboard title
 st.title(":potable_water: :blue[若水]身障就業資料分析")
@@ -522,7 +603,7 @@ with placeholder.container():
             correlation_matrix = Visualization("correlation", scores_df, corr_features)
 
         if option == "利用特質建模預測關鍵TA":
-            pass
+            model_performance = Visualization("models")
 
     with fig_col3:
         st.header(":books: 管道")
@@ -545,3 +626,76 @@ with placeholder.container():
             job_consideration = Visualization("job_consideration", scores_df)
         if option == "問卷求職管道":
             job_channel = Visualization("job_channel", scores_df)
+
+
+# Load the dataset
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+
+
+@ignore_warnings(category=ConvergenceWarning)
+def logistic_regression_bootstrap(
+    df,
+    features,
+    target="關鍵TA",
+    test_size=0.2,
+    random_state=42,
+    n_bootstraps=100,
+    title="Bootstrapped",
+):
+    # df = scores_df.copy()
+    X_train, X_test, y_train, y_test = train_test_split(
+        df[features], df[target], test_size=test_size, random_state=random_state
+    )
+
+    classifier = LogisticRegression(random_state=42)
+    classifier.fit(X_train, y_train)
+
+    # Predict on the testing data
+    y_test_pred = classifier.predict(X_test)
+
+    bootstrap_accuracies = []
+    # bootstrapping
+    for _ in range(n_bootstraps):
+        # TODO: wrap try catch here in case we get all TA's
+        X_train_boot, y_train_boot = resample(X_train, y_train)
+        classifier.fit(X_train_boot, y_train_boot)
+        # Predict on the original testing data
+        y_test_pred_boot = classifier.predict(X_test)
+        bootstrap_accuracies.append(accuracy_score(y_test, y_test_pred_boot))
+    bootstrap_accuracies = np.array(bootstrap_accuracies)
+    mean_accuracy = bootstrap_accuracies.mean()
+    std_dev_accuracy = bootstrap_accuracies.std()
+
+    # Plot the distribution of accuracies
+    len_training = len(X_train)
+    len_testing = len(X_test)
+    print(f"用{len_training}位訓練，{len_testing}位盲測")
+    plt.figure(figsize=(10, 6))
+    sns.histplot(bootstrap_accuracies, kde=True)
+    plt.title(title)
+    plt.xlabel("Accuracy")
+    plt.ylabel("Frequency")
+    plt.axvline(
+        x=mean_accuracy,
+        color="red",
+        linestyle="--",
+        label=f"Mean Accuracy: {mean_accuracy:.2f}",
+    )
+    plt.legend()
+    plt.show()
+    return classifier, bootstrap_accuracies
+
+
+# lrm1, bootstrap_accuracies = logistic_regression_bootstrap(
+#     scores_df, inside_features, n_bootstraps=500, title="LR Inside Distribution"
+# )
+# lrm2, bootstrap_accuracies = logistic_regression_bootstrap(
+#     scores_df, outside_features, n_bootstraps=500, title="LR Outside Distribution"
+# )
+# lrm3, bootstrap_accuracies = logistic_regression_bootstrap(
+#     scores_df,
+#     inside_features + outside_features,
+#     n_bootstraps=500,
+#     title="LR Inside + Outside Distribution",
+# )
