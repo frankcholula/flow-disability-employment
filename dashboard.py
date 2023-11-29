@@ -316,10 +316,15 @@ class Visualization:
         )
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_")
+        st.markdown("### 結果")
+        st.text("1. 自我身心照顧與每項內在特質有強度相關性。")
+        st.text("2. 量化求職考量與每項內在特質有中、強度相關性。")
+        st.text("3. 家人支持程度與、私人企業工作經驗、社群社交活動與幾項內在特質有弱度相關性。")
+        st.text("4. 先天後天沒有和內在特質有相關度")
         st.markdown("### 結論")
-        st.text("1. 自我身心照顧與每向內在特質有高度相關性，所以是很重要的外在指標")
-        st.text("2. 量化求職考量與解決問題意願和基本溝通表達是高相關")
-        st.text("3. 家人支持程度與美向內在特質是中度相關")
+        st.text("1. 自我身心照顧和每項內在特質皆有高度相關，為最重要的外在特質！")
+        st.text("2. 求職考量*和基本溝通表達有高度相關，和其他四項有中度相關，為次重要的關鍵外在特質。")
+        st.text("3. 先天後天與關鍵TA很明顯沒有相關性，所以可以不用考慮。")
 
     def generate_disability_histogram(self, df):
         my_df = df.copy()
@@ -492,7 +497,11 @@ class Visualization:
         st.text("5. 未來可強化連結同性質社群，提升關鍵TA觸及率，例：身心障礙潛水協會")
 
     def generate_model_performance(self):
+        inside_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願"]
+        outside_features = ["社群和社交活動", "自我身心照顧", "家人支持程度", "私人企業工作經驗", "量化求職考量"]
+
         @ignore_warnings(category=ConvergenceWarning)
+        @st.cache_data
         def logistic_regression_bootstrap(
             df,
             features,
@@ -544,6 +553,7 @@ class Visualization:
             st.pyplot(fig)
             return classifier, bootstrap_accuracies
 
+        @st.cache_data
         def svm_bootstrap(
             df,
             features,
@@ -761,6 +771,16 @@ with placeholder.container():
 
         if option == "利用特質建模預測關鍵TA":
             model_performance = Visualization("models")
+            st.markdown("### 實驗")
+            st.text("我們透過內在特質、外在特質、內+外在特質、PPSS特質建立了關鍵 TA 的預測模型。")
+            st.text("但因為『先天後天』指標沒有明確的關聯繫，所以我們沒有將其納入模型。")
+            st.markdown("### 結果")
+            st.text("1. 透過內在特質建模，預測關鍵 TA 的最高平均準確率為 0.97。")
+            st.text("2. 透過外在特質建模，預測關鍵 TA 的最高平均準確率為 0.89。")
+            st.text("3. 透過內+外在特質，預測關鍵 TA 的最高平均準確率為 0.95。")
+            st.text("4. 透過PPSS特質，預測關鍵 TA 的最高平均準確率為 0.61。")
+            st.markdown("### 結論")
+            st.text("內在特質才是最準確的評測指標，但只看外在特質也有不錯的表現！")
 
     with fig_col3:
         st.header(":books: 管道")
