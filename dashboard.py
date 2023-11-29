@@ -266,27 +266,32 @@ class Visualization:
     def generate_distribution(self, df: pd.DataFrame, features: List[str]):
         dist_df = df.copy()
         dist_df = dist_df[dist_df["內外部"] == "外部"].reset_index(drop=True)
-        for feature in features:
-            num_bins = int(dist_df[feature].max() - dist_df[feature].min() + 1)
-
-            fig = px.histogram(
-                dist_df,
-                x=feature,
-                marginal="box",
-                title=f"外部關鍵TA vs 外部非關鍵的{feature}常態分佈",
-                nbins=num_bins,
-                color="關鍵TA",
-                color_discrete_sequence=["red", "blue"],
+        dist_col1, dist_col2 = st.columns(2)
+        with dist_col1:
+            feature_filter = st.selectbox(
+                "選擇特質分數",
+                ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧", "總分"],
             )
+        num_bins = int(
+            dist_df[feature_filter].max() - dist_df[feature_filter].min() + 1
+        )
 
-            fig.update_layout(
-                xaxis=dict(tickmode="linear", tick0=dist_df[feature].min(), dtick=1)
-            )
+        fig = px.histogram(
+            dist_df,
+            x=feature_filter,
+            marginal="box",
+            title=f"外部關鍵TA vs 外部非關鍵的{feature_filter}常態分佈",
+            nbins=num_bins,
+            color="關鍵TA",
+            color_discrete_sequence=["red", "blue"],
+        )
 
-            fig.update_traces(opacity=0.75)
-            st.plotly_chart(fig, use_container_width=True)
-        st.markdown("### 結論")
-        st.text("1. 依照六大特質加總結果，定義出判別關鍵 TA 的標準線，為總分18分以上。（滿分23分）")
+        fig.update_layout(
+            xaxis=dict(tickmode="linear", tick0=dist_df[feature_filter].min(), dtick=1)
+        )
+
+        fig.update_traces(opacity=0.75)
+        st.plotly_chart(fig, use_container_width=True)
 
     def generate_correlation_matrix(
         self,
@@ -315,16 +320,6 @@ class Visualization:
             yaxis=dict(title=yaxis),
         )
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_")
-        st.markdown("### 結果")
-        st.text("1. 自我身心照顧與每項內在特質有強度相關性。")
-        st.text("2. 量化求職考量與每項內在特質有中、強度相關性。")
-        st.text("3. 家人支持程度與、私人企業工作經驗、社群社交活動與幾項內在特質有弱度相關性。")
-        st.text("4. 先天後天沒有和內在特質有相關度")
-        st.markdown("### 結論")
-        st.text("1. 自我身心照顧和每項內在特質皆有高度相關，為最重要的外在特質！")
-        st.text("2. 求職考量*和基本溝通表達有高度相關，和其他四項有中度相關，為次重要的關鍵外在特質。")
-        st.text("3. 先天後天與關鍵TA很明顯沒有相關性，所以可以不用考慮。")
 
     def generate_disability_histogram(self, df):
         my_df = df.copy()
@@ -489,12 +484,6 @@ class Visualization:
                 font=dict(size=12, color="black"),
             )
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("### 結論")
-        st.text("1. 無論是求職管道總人數(20人)，以及招募管道有效性(12人，60%)皆以網路人力銀行為最高")
-        st.text("2. 招募管效性次高為社群貼文（4人，57%）")
-        st.text("3. 根據實際訪談與求職管道比對後，發現關鍵 TA 並非集中存在「與該障別直接相關」的傷友支持社群或非營利組織")
-        st.text("4. 相對來說，他們多聚集於興趣、自我挑戰導向的私密社群，例：輪椅夢公園群組")
-        st.text("5. 未來可強化連結同性質社群，提升關鍵TA觸及率，例：身心障礙潛水協會")
 
     def generate_model_performance(self):
         inside_features = ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願"]
@@ -716,6 +705,10 @@ with placeholder.container():
                     )
         if option == "外部關鍵TA的特質常態分佈":
             distribution = Visualization("distribution", scores_df, radar_features)
+            st.markdown("### 結論")
+            st.markdown("1. 依照六大特質加總結果，定義出判別關鍵 TA 的標準線，為總分18分以上(滿分23分)。")
+            st.markdown("2. 建議持續優化評測指標並建立評估表，在徵才階段有效判斷六大特質。")
+
         if option == "內外部關鍵TA的特質雷達圖":
             filter_col1, filter_col2 = st.columns(2)
             with filter_col1:
@@ -768,7 +761,16 @@ with placeholder.container():
         if option == "特質相關矩陣":
             corr_features = inside_features + outside_features
             correlation_matrix = Visualization("correlation", scores_df, corr_features)
-
+            st.markdown("_0.2以下不相關，0.2 − 0.39 是弱相關， 0.4 − 0.59 是中度相關，0.6 − 0.79 是強相關。_")
+            st.markdown("### 結果")
+            st.markdown("1. 自我身心照顧與每項內在特質有強度相關性。")
+            st.markdown("2. 量化求職考量與每項內在特質有中、強度相關性。")
+            st.markdown("3. 家人支持程度與、私人企業工作經驗、社群社交活動與幾項內在特質有弱度相關性。")
+            st.markdown("4. 先天後天沒有和內在特質有相關度")
+            st.markdown("### 結論")
+            st.markdown("1. 自我身心照顧和每項內在特質皆有高度相關，為最重要的外在特質！")
+            st.markdown("2. 求職考量*和基本溝通表達有高度相關，和其他四項有中度相關，為次重要的關鍵外在特質。")
+            st.markdown("3. 先天後天與關鍵TA很明顯沒有相關性，所以可以不用考慮。")
         if option == "利用特質建模預測關鍵TA":
             model_performance = Visualization("models")
             st.markdown("### 實驗")
@@ -799,7 +801,26 @@ with placeholder.container():
             education_dist = Visualization("education", scores_df)
         if option == "訪談者障別分析":
             disability_types = Visualization("disability", scores_df)
+            st.markdown("### 結果")
+            st.markdown(
+                "1. 訪談者障別分析發現，脊椎損傷、腦性麻痺、肌肉萎縮為三大主要障別有高度關鍵TA。但這也有可能是因為這三種障別的訪談者較多，所以有待進一步驗證。"
+            )
+            st.markdown("### 結論")
+            st.markdown(
+                "1. 外部訪談發現，肌肉萎縮的受訪者皆為關鍵人才 。因肌肉萎縮為罕見疾病, 較無法大規模主動觸及。企業可考慮將肌肉萎縮納入徵才階段的障別考量參考，並持續驗證。"
+            )
         if option == "訪談者求職考量":
             job_consideration = Visualization("job_consideration", scores_df)
+            st.markdown("### 結論")
+            st.markdown("1. 關鍵人才重視的求職考量要素排序：工作性質與內容 > 無障礙環境 > 經濟需求")
+            st.markdown("2. 非關鍵人才重視的求職考量要素排序：經濟需求 > 無障礙環境 > 交通距離")
         if option == "問卷求職管道":
             job_channel = Visualization("job_channel", scores_df)
+            st.markdown("### 結果")
+            st.markdown("1. 無論是求職管道總人數(20人)，以及招募管道有效性(12人，60%)皆以網路人力銀行為最高")
+            st.markdown("2. 招募管效性次高為社群貼文（4人，57%）")
+
+            st.markdown("### 結論")
+            st.markdown(
+                "1. 根據實際訪談與求職管道比對後，發現關鍵人才並非集中存在「與該障別直接相關」的傷友支持社群或非營利組織。相對來說，他們多聚集於自我挑戰導向的活動Line社群，例：輪椅夢公園群組。未來可強化連結同性質社群，例：身心障礙潛水協會"
+            )
