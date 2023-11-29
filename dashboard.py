@@ -493,7 +493,6 @@ class Visualization:
 
     def generate_model_performance(self):
         @ignore_warnings(category=ConvergenceWarning)
-        @st.cache_data
         def logistic_regression_bootstrap(
             df,
             features,
@@ -545,7 +544,6 @@ class Visualization:
             st.pyplot(fig)
             return classifier, bootstrap_accuracies
 
-        @st.cache_data
         def svm_bootstrap(
             df,
             features,
@@ -603,34 +601,33 @@ class Visualization:
         with model_col2:
             features = st.selectbox("選擇特質", ("內在特質", "外在特質", "內+外在特質", "PPSS"))
 
-        outside_df = scores_df.copy()
-        outside_df = outside_df[outside_df["內外部"] == "外部"].reset_index(drop=True)
+        model_df = scores_df.copy()
         if model == "SVM":
             with st.spinner("訓練中..."):
                 if features == "內在特質":
                     svm, bootstrap_accuracies = svm_bootstrap(
-                        outside_df,
+                        model_df,
                         inside_features,
                         n_bootstraps=500,
                         title="SVM Model Using Inside Features",
                     )
                 if features == "外在特質":
                     svm, bootstrap_accuracies = svm_bootstrap(
-                        outside_df,
+                        model_df,
                         outside_features,
                         n_bootstraps=500,
                         title="SVM Model Using Outside Features",
                     )
                 if features == "內+外在特質":
                     svm, bootstrap_accuracies = svm_bootstrap(
-                        outside_df,
+                        model_df,
                         inside_features + outside_features,
                         n_bootstraps=500,
                         title="SVM Model Using Inside and Outside Features",
                     )
                 if features == "PPSS":
                     svm, bootstrap_accuracies = svm_bootstrap(
-                        outside_df,
+                        model_df,
                         ppss_features,
                         n_bootstraps=500,
                         title="SVM Model Using PPSS",
@@ -639,28 +636,28 @@ class Visualization:
             with st.spinner("訓練中..."):
                 if features == "內在特質":
                     lrm, bootstrap_accuracies = logistic_regression_bootstrap(
-                        outside_df,
+                        model_df,
                         inside_features,
                         n_bootstraps=500,
                         title="LR Model Using Inside Features",
                     )
                 if features == "外在特質":
                     lrm, bootstrap_accuracies = logistic_regression_bootstrap(
-                        outside_df,
+                        model_df,
                         outside_features,
                         n_bootstraps=500,
                         title="LR Model Using Outside Features",
                     )
                 if features == "內+外在特質":
                     lrm, bootstrap_accuracies = logistic_regression_bootstrap(
-                        outside_df,
+                        scores_df,
                         inside_features + outside_features,
                         n_bootstraps=500,
                         title="LR Model Using Both Inside and Outside Features",
                     )
                 if features == "PPSS":
                     lrm, bootstrap_accuracies = logistic_regression_bootstrap(
-                        outside_df,
+                        scores_df,
                         ppss_features,
                         n_bootstraps=500,
                         title="LR Model Using PPSS",
