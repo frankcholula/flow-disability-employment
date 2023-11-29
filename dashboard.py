@@ -266,11 +266,12 @@ class Visualization:
     def generate_distribution(self, df: pd.DataFrame, features: List[str]):
         dist_df = df.copy()
         dist_df = dist_df[dist_df["內外部"] == "外部"].reset_index(drop=True)
+        dist_df["六大總分"] = dist_df[features].sum(axis=1)
         dist_col1, dist_col2 = st.columns(2)
         with dist_col1:
             feature_filter = st.selectbox(
                 "選擇特質分數",
-                ["工作意願和動機", "學習動力", "基本溝通表達", "工作責任感", "解決問題意願", "自我身心照顧", "總分"],
+                features + ["六大總分"],
             )
         num_bins = int(
             dist_df[feature_filter].max() - dist_df[feature_filter].min() + 1
