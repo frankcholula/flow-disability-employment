@@ -288,7 +288,8 @@ class Visualization:
         )
 
         fig.update_layout(
-            xaxis=dict(tickmode="linear", tick0=dist_df[feature_filter].min(), dtick=1)
+            xaxis=dict(tickmode="linear", tick0=dist_df[feature_filter].min(), dtick=1),
+            yaxis=dict(title="人數"),
         )
 
         fig.update_traces(opacity=0.75)
