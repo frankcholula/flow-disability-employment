@@ -268,6 +268,7 @@ class Visualization:
         dist_df = dist_df[dist_df["內外部"] == "外部"].reset_index(drop=True)
         dist_df["六大總分"] = dist_df[features].sum(axis=1)
         dist_col1, dist_col2 = st.columns(2)
+
         with dist_col1:
             feature_filter = st.selectbox(
                 "選擇特質分數",
@@ -278,10 +279,25 @@ class Visualization:
             nonta_list = (
                 dist_df[dist_df["關鍵TA"] == "F"]["六大總分"].dropna().values.tolist()
             )
-            hist_data = [ta_list, nonta_list]
-            fig = ff.create_distplot(
-                hist_data, ["關鍵TA", "非關鍵TA"], bin_size=2, colors=["red", "blue"]
-            )
+            with dist_col2:
+                selected_group = st.selectbox("選擇族群", ("關鍵vs.非關鍵TA", "全部TA"))
+            print(dist_col2)
+            if selected_group == "關鍵vs.非關鍵TA":
+                hist_data = [ta_list, nonta_list]
+                fig = ff.create_distplot(
+                    hist_data,
+                    ["關鍵TA", "非關鍵TA"],
+                    bin_size=2,
+                    colors=["red", "blue"],
+                )
+            elif selected_group == "全部TA":
+                hist_data = ta_list + nonta_list
+                fig = ff.create_distplot(
+                    [hist_data],
+                    ["全部TA"],
+                    bin_size=2,
+                    colors=["green"],
+                )
         else:
             num_bins = int(
                 dist_df[feature_filter].max() - dist_df[feature_filter].min() + 1
