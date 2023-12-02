@@ -271,28 +271,39 @@ class Visualization:
         with dist_col1:
             feature_filter = st.selectbox(
                 "選擇特質分數",
-                features + ["六大總分"],
+                features + ["六大總分"] + ["六大總分(核密度)"],
             )
-        num_bins = int(
-            dist_df[feature_filter].max() - dist_df[feature_filter].min() + 1
-        )
+        if feature_filter == "六大總分(核密度)":
+            ta_list = dist_df[dist_df["關鍵TA"] == "T"]["六大總分"].dropna().values.tolist()
+            nonta_list = (
+                dist_df[dist_df["關鍵TA"] == "F"]["六大總分"].dropna().values.tolist()
+            )
+            hist_data = [ta_list, nonta_list]
+            fig = ff.create_distplot(
+                hist_data, ["關鍵TA", "非關鍵TA"], bin_size=2, colors=["red", "blue"]
+            )
+        else:
+            num_bins = int(
+                dist_df[feature_filter].max() - dist_df[feature_filter].min() + 1
+            )
+            fig = px.histogram(
+                dist_df,
+                x=feature_filter,
+                marginal="box",
+                title=f"外部關鍵TA vs 外部非關鍵的{feature_filter}常態分佈",
+                nbins=num_bins,
+                color="關鍵TA",
+                color_discrete_sequence=["red", "blue"],
+            )
 
-        fig = px.histogram(
-            dist_df,
-            x=feature_filter,
-            marginal="box",
-            title=f"外部關鍵TA vs 外部非關鍵的{feature_filter}常態分佈",
-            nbins=num_bins,
-            color="關鍵TA",
-            color_discrete_sequence=["red", "blue"],
-        )
+            fig.update_layout(
+                xaxis=dict(
+                    tickmode="linear", tick0=dist_df[feature_filter].min(), dtick=1
+                ),
+                yaxis=dict(title="人數"),
+            )
 
-        fig.update_layout(
-            xaxis=dict(tickmode="linear", tick0=dist_df[feature_filter].min(), dtick=1),
-            yaxis=dict(title="人數"),
-        )
-
-        fig.update_traces(opacity=0.75)
+            fig.update_traces(opacity=0.75)
         st.plotly_chart(fig, use_container_width=True)
 
     def generate_correlation_matrix(
