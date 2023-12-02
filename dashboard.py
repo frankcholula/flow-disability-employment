@@ -736,10 +736,12 @@ with placeholder.container():
                     )
         if option == "外部關鍵TA的特質常態分佈":
             distribution = Visualization("distribution", scores_df, radar_features)
+            st.markdown("### 結果")
+            st.markdown("1. 關鍵TA(總分16分以上) 57%, 非關鍵TA (總分16分以下) 43%。")
             st.markdown("### 結論")
-            st.markdown("1. 依照六大特質加總結果，定義出判別關鍵 TA 的標準線，為總分18分以上(滿分23分)。")
-            st.markdown("2. 建議持續優化評測指標並建立評估表，在徵才階段有效判斷六大特質。")
-
+            st.markdown("1. 依照六大特質加總結果，定義出判別關鍵 TA 的標準線(Q1)，為總分18分以上(滿分23分)。")
+            st.markdown("2. 鎖定關鍵TA Q1(18分)以上的人才，但 Q3(22分) 以下的人。大概佔比有 23%。")
+            st.markdown("3. 建議持續優化評測指標並建立評估表，在徵才階段有效判斷六大特質。")
         if option == "內外部關鍵TA的特質雷達圖":
             filter_col1, filter_col2 = st.columns(2)
             with filter_col1:
