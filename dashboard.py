@@ -65,7 +65,13 @@ st.set_page_config(
     page_title="若水身障就業資料分析",
     page_icon="🚰",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
+with st.sidebar:
+    st.markdown("## 喜歡這個專案嗎？")
+    st.markdown(
+        "[在 GitHub 上給顆:star:吧](https://github.com/frankcholula/flow-disability-employment)"
+    )
 
 
 # data preparation
@@ -697,9 +703,11 @@ class Visualization:
 # dashboard title
 st.title(":potable_water: :blue[若水]身障就業資料分析")
 st.markdown("『_創造多元共﻿融環境是為了每一個人_』，我們希望透過商業力量，協助企業和身障人才有效銜接，改善身障就業問題！")
-
-
 scores_df = read_data(dataset_url)
+
+with st.expander("訪談資料預覽", expanded=False):
+    st.write(scores_df)
+
 
 placeholder = st.empty()
 with placeholder.container():
