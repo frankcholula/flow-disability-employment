@@ -288,6 +288,7 @@ class Visualization:
                     hist_data,
                     ["關鍵TA", "非關鍵TA"],
                     bin_size=2,
+                    histnorm="probability",
                     colors=["red", "blue"],
                 )
             elif selected_group == "全部TA":
@@ -296,6 +297,7 @@ class Visualization:
                     [hist_data],
                     ["全部TA"],
                     bin_size=2,
+                    histnorm="probability",
                     colors=["green"],
                 )
         else:
