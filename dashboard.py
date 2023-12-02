@@ -563,7 +563,7 @@ class Visualization:
             # Plot the distribution of accuracies
             len_training = len(X_train)
             len_testing = len(X_test)
-            st.text(f"跑{n_bootstraps}次，隨機選用{len_training}位訓練，指定{len_testing}位盲測")
+            st.markdown(f"跑{n_bootstraps}次，隨機選用{len_training}位訓練，指定{len_testing}位盲測")
             fig = plt.figure(figsize=(10, 6))
             sns.histplot(bootstrap_accuracies, kde=True)
             plt.title(title)
@@ -615,7 +615,7 @@ class Visualization:
             # Plot the distribution of accuracies
             len_training = len(X_train)
             len_testing = len(X_test)
-            st.text(f"跑{n_bootstraps}次，隨機選用{len_training}位訓練，指定{len_testing}位盲測")
+            st.markdown(f"跑{n_bootstraps}次，隨機選用{len_training}位訓練，指定{len_testing}位盲測")
             fig = plt.figure(figsize=(10, 6))
             sns.histplot(bootstrap_accuracies, kde=True)
             plt.title(title)
@@ -815,15 +815,15 @@ with placeholder.container():
         if option == "利用特質建模預測關鍵TA":
             model_performance = Visualization("models")
             st.markdown("### 實驗")
-            st.text("我們透過內在特質、外在特質、內+外在特質、PPSS特質建立了關鍵 TA 的預測模型。")
-            st.text("但因為『先天後天』指標沒有明確的關聯繫，所以我們沒有將其納入模型。")
+            st.markdown("我們透過內在特質、外在特質、內+外在特質、PPSS特質建立了關鍵 TA 的預測模型。")
+            st.markdown("但因為『先天後天』指標沒有明確的關聯繫，所以我們沒有將其納入模型。")
             st.markdown("### 結果")
-            st.text("1. 透過內在特質建模，預測關鍵 TA 的最高平均準確率為 0.97。")
-            st.text("2. 透過外在特質建模，預測關鍵 TA 的最高平均準確率為 0.89。")
-            st.text("3. 透過內+外在特質，預測關鍵 TA 的最高平均準確率為 0.95。")
-            st.text("4. 透過PPSS特質，預測關鍵 TA 的最高平均準確率為 0.61。")
+            st.markdown("1. 透過內在特質建模，預測關鍵 TA 的最高平均準確率為 0.97。")
+            st.markdown("2. 透過外在特質建模，預測關鍵 TA 的最高平均準確率為 0.89。")
+            st.markdown("3. 透過內+外在特質，預測關鍵 TA 的最高平均準確率為 0.95。")
+            st.markdown("4. 透過PPSS特質，預測關鍵 TA 的最高平均準確率為 0.61。")
             st.markdown("### 結論")
-            st.text("內在特質才是最準確的評測指標，但只看外在特質也有不錯的表現！")
+            st.markdown("內在特質才是最準確的評測指標，但只看外在特質也有不錯的表現！")
 
     with fig_col3:
         st.header(":books: 管道")
